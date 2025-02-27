@@ -23,8 +23,10 @@ public class OrderControllerTests {
     void testCreateOrder() throws Exception {
         mockMvc.perform(post("/orders")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-                .andExpect(status().isCreated());
+                .content("{\"customerId\":1,\"items\":[{\"productId\":1,\"quantity\":2}]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").exists())
+                .andExpect(jsonPath("$.status").value("Pending"));
     }
 
     @Test
@@ -32,7 +34,8 @@ public class OrderControllerTests {
     void testGetOrders() throws Exception {
         mockMvc.perform(get("/orders"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("[]"));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test
@@ -40,7 +43,7 @@ public class OrderControllerTests {
     void testGetOrder() throws Exception {
         mockMvc.perform(get("/orders/1"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("{}"));
+                .andExpect(jsonPath("$.id").value(1));
     }
 
     @Test
@@ -48,8 +51,9 @@ public class OrderControllerTests {
     void testUpdateOrder() throws Exception {
         mockMvc.perform(put("/orders/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-                .andExpect(status().isOk());
+                .content("{\"id\":1,\"customerId\":1,\"status\":\"Processing\",\"totalAmount\":99.99}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("Processing"));
     }
 
     @Test
@@ -63,7 +67,8 @@ public class OrderControllerTests {
     @DisplayName("Should allocate inventory for an order and return 200 OK status")
     void testAllocateInventory() throws Exception {
         mockMvc.perform(post("/orders/1/allocate"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("Allocated"));
     }
 
     @Test
@@ -72,6 +77,7 @@ public class OrderControllerTests {
         mockMvc.perform(put("/orders/1/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"status\":\"Processing\"}"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("Processing"));
     }
 }
