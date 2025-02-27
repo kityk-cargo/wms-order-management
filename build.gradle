@@ -6,6 +6,7 @@ plugins {
 	id 'checkstyle'
 	id 'pmd'
 	id 'com.github.spotbugs' version '6.1.6'
+	id 'org.springdoc.openapi-gradle-plugin' version '1.8.0'
 }
 
 group = 'cargo.kityk.wms'
@@ -115,3 +116,12 @@ task integrationTest(type: Test) {
 }
 
 check.dependsOn integrationTest
+
+openApi {
+	outputDir = file("$buildDir/api-docs")
+	outputFileName = 'openapi.json'
+	waitTimeInSeconds = 10
+	customBootRun {
+		args = ['--spring.profiles.active=test']
+	}
+}
