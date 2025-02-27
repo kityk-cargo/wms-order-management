@@ -1,7 +1,12 @@
 plugins {
 	id 'java'
+	id 'groovy'
 	id 'org.springframework.boot' version '3.5.0-SNAPSHOT'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'checkstyle'
+	id 'pmd'
+	id 'com.github.spotbugs' version '6.1.6'
+	id 'org.springdoc.openapi-gradle-plugin' version '1.8.0'
 }
 
 group = 'cargo.kityk.wms'
@@ -21,8 +26,8 @@ configurations {
 
 repositories {
 	mavenCentral()
-	maven { url 'https://repo.spring.io/milestone' }
-	maven { url 'https://repo.spring.io/snapshot' }
+	maven { url = uri("https://repo.spring.io/milestone") }
+	maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
 ext {
@@ -33,12 +38,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 	implementation 'org.springframework.kafka:spring-kafka'
+	implementation 'org.codehaus.groovy:groovy-all:3.0.23'
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'org.postgresql:postgresql'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-common:2.3.0'
 }
 
 dependencyManagement {
@@ -49,4 +57,71 @@ dependencyManagement {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-parameters']
+}
+
+tasks.withType(GroovyCompile) {
+    options.compilerArgs += ['-parameters']
+}
+
+checkstyle {
+	toolVersion = '10.12.4'
+	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+}
+
+pmd {
+	toolVersion = '6.55.0'
+	ruleSets = ["category/java/bestpractices.xml", "category/java/errorprone.xml"]
+}
+
+spotbugs {
+	toolVersion = '4.8.3'
+	excludeFilter = file("${rootDir}/config/spotbugs/exclude.xml")
+	ignoreFailures = true
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+	reports {
+		xml.required = false
+		html.required = true
+	}
+}
+
+sourceSets {
+	integrationTest {
+		groovy {
+			srcDir file('src/integration-test/groovy')
+		}
+		java {
+			srcDir file('src/integration-test/java')
+		}
+		resources {
+			srcDir file('src/integration-test/resources')
+		}
+		compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+		runtimeClasspath += output + compileClasspath
+	}
+}
+
+task integrationTest(type: Test) {
+	description = 'Runs integration tests.'
+	group = 'verification'
+
+	testClassesDirs = sourceSets.integrationTest.output.classesDirs
+	classpath = sourceSets.integrationTest.runtimeClasspath
+	shouldRunAfter test
+}
+
+check.dependsOn integrationTest
+
+openApi {
+	outputDir = file("$buildDir/api-docs")
+	outputFileName = 'openapi.json'
+	waitTimeInSeconds = 10
+	customBootRun {
+		args = ['--spring.profiles.active=test']
+	}
 }
