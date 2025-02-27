@@ -13,5 +13,15 @@ class OrderCreateDTO {
         schema = @Schema(implementation = OrderItemCreateDTO.class),
         arraySchema = @Schema(description = "Items to be ordered")
     )
-    List<OrderItemCreateDTO> items = []
+    private List<OrderItemCreateDTO> items = []
+    
+    // Defensive getter for items
+    List<OrderItemCreateDTO> getItems() {
+        return items ? new ArrayList<>(items) : []
+    }
+    
+    // Defensive setter for items
+    void setItems(List<OrderItemCreateDTO> items) {
+        this.items = items ? new ArrayList<>(items) : []
+    }
 } 

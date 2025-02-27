@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exclude test classes -->
+    <Match>
+        <Class name="~.*\.*Test"/>
+    </Match>
+    
+    <!-- Exclude serialVersionUID warnings for Groovy classes -->
+    <Match>
+        <Class name="~.*\$_.*_closure\d+"/>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+    
+    <!-- Exclude metaClass warnings which are standard in Groovy -->
+    <Match>
+        <Method name="getMetaClass"/>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+    
+    <Match>
+        <Method name="setMetaClass"/>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+    
+    <!-- Optional: If you're using @Canonical for immutable objects, you can exclude these -->
+    <Match>
+        <Class name="~cargo\.kityk\.wms\.order\.dto\..*"/>
+        <Or>
+            <Bug pattern="EI_EXPOSE_REP"/>
+            <Bug pattern="EI_EXPOSE_REP2"/>
+        </Or>
+    </Match>
+</FindBugsFilter> 

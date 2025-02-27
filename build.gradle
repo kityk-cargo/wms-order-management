@@ -3,6 +3,9 @@ plugins {
 	id 'groovy'
 	id 'org.springframework.boot' version '3.5.0-SNAPSHOT'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'checkstyle'
+	id 'pmd'
+	id 'com.github.spotbugs' version '6.1.6'
 }
 
 group = 'cargo.kityk.wms'
@@ -22,8 +25,8 @@ configurations {
 
 repositories {
 	mavenCentral()
-	maven { url 'https://repo.spring.io/milestone' }
-	maven { url 'https://repo.spring.io/snapshot' }
+	maven { url = uri("https://repo.spring.io/milestone") }
+	maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
 ext {
@@ -62,3 +65,53 @@ tasks.withType(JavaCompile) {
 tasks.withType(GroovyCompile) {
     options.compilerArgs += ['-parameters']
 }
+
+checkstyle {
+	toolVersion = '10.12.4'
+	configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+}
+
+pmd {
+	toolVersion = '6.55.0'
+	ruleSets = ["category/java/bestpractices.xml", "category/java/errorprone.xml"]
+}
+
+spotbugs {
+	toolVersion = '4.8.3'
+	excludeFilter = file("${rootDir}/config/spotbugs/exclude.xml")
+	ignoreFailures = true
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+	reports {
+		xml.required = false
+		html.required = true
+	}
+}
+
+sourceSets {
+	integrationTest {
+		groovy {
+			srcDir file('src/integration-test/groovy')
+		}
+		java {
+			srcDir file('src/integration-test/java')
+		}
+		resources {
+			srcDir file('src/integration-test/resources')
+		}
+		compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
+		runtimeClasspath += output + compileClasspath
+	}
+}
+
+task integrationTest(type: Test) {
+	description = 'Runs integration tests.'
+	group = 'verification'
+
+	testClassesDirs = sourceSets.integrationTest.output.classesDirs
+	classpath = sourceSets.integrationTest.runtimeClasspath
+	shouldRunAfter test
+}
+
+check.dependsOn integrationTest

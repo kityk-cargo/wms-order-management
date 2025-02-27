@@ -49,7 +49,7 @@ class OrderController {
             orderDate: ZonedDateTime.now(),
             status: "Pending",
             totalAmount: calculateTotalAmount(orderCreateDTO.items),
-            items: orderCreateDTO.items.collect { item ->
+            items: orderCreateDTO.getItems().collect { item ->
                 new OrderItemDTO(
                     id: 1L,
                     productId: item.productId,
