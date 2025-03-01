@@ -1,22 +1,28 @@
-package cargo.kityk.wms.order.dto
+package cargo.kityk.wms.order.dto;
 
-import groovy.transform.Canonical
-import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Canonical
-class CustomerDTO {
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class CustomerDTO {
     @Schema(description = "Customer ID", example = "1")
-    Long id
+    private Long id;
     
     @Schema(description = "Customer name", example = "John Smith")
-    String name
+    private String name;
     
     @Schema(description = "Customer email address", example = "john.smith@example.com")
-    String email
+    private String email;
     
     @Schema(description = "Customer phone number", example = "+1-555-123-4567")
-    String phone
+    private String phone;
     
     @Schema(description = "Customer shipping address", example = "123 Main St, Springfield, IL 62701")
-    String address
+    private String address;
 } 

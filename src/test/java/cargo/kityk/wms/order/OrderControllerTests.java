@@ -1,29 +1,52 @@
 package cargo.kityk.wms.order;
 
+import cargo.kityk.wms.order.dto.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.math.BigDecimal;
+import java.util.Collections;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@Import(TestConfiguration.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 public class OrderControllerTests {
 
     @Autowired
     private MockMvc mockMvc;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     @DisplayName("Should create a new order and return 201 Created status")
     void testCreateOrder() throws Exception {
+        // Create test data using our DTO builders
+        OrderItemCreateDTO orderItem = OrderItemCreateDTO.builder()
+                .productId(1L)
+                .quantity(2)
+                .build();
+                
+        OrderCreateDTO orderCreate = OrderCreateDTO.builder()
+                .customerId(1L)
+                .items(Collections.singletonList(orderItem))
+                .build();
+                
+        String jsonContent = objectMapper.writeValueAsString(orderCreate);
+        
         mockMvc.perform(post("/orders")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"customerId\":1,\"items\":[{\"productId\":1,\"quantity\":2}]}"))
+                .content(jsonContent))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.status").value("Pending"));
@@ -49,9 +72,27 @@ public class OrderControllerTests {
     @Test
     @DisplayName("Should update an existing order and return 200 OK status")
     void testUpdateOrder() throws Exception {
+        // Create test data using our DTO builders
+        OrderItemDTO orderItem = OrderItemDTO.builder()
+                .id(1L)
+                .productId(1L)
+                .quantity(2)
+                .price(new BigDecimal("49.99"))
+                .build();
+                
+        OrderDTO orderDTO = OrderDTO.builder()
+                .id(1L)
+                .customerId(1L)
+                .status("Processing")
+                .totalAmount(new BigDecimal("99.99"))
+                .items(Collections.singletonList(orderItem))
+                .build();
+                
+        String jsonContent = objectMapper.writeValueAsString(orderDTO);
+        
         mockMvc.perform(put("/orders/1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"id\":1,\"customerId\":1,\"status\":\"Processing\",\"totalAmount\":99.99}"))
+                .content(jsonContent))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("Processing"));
     }
@@ -74,9 +115,16 @@ public class OrderControllerTests {
     @Test
     @DisplayName("Should update order status and return 200 OK status")
     void testUpdateOrderStatus() throws Exception {
+        // Create test data using our DTO builder
+        OrderStatusDTO statusDTO = OrderStatusDTO.builder()
+                .status("Processing")
+                .build();
+                
+        String jsonContent = objectMapper.writeValueAsString(statusDTO);
+        
         mockMvc.perform(put("/orders/1/status")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"status\":\"Processing\"}"))
+                .content(jsonContent))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("Processing"));
     }
