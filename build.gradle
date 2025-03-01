@@ -36,6 +36,9 @@ ext {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation('org.springframework.boot:spring-boot-starter-data-jpa') {
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+	}
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 	implementation 'org.springframework.kafka:spring-kafka'
 	implementation 'org.apache.groovy:groovy-all:4.0.25'
@@ -49,6 +52,9 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-common:2.3.0'
 	implementation 'org.apache.groovy:groovy-json:4.0.25'
 	implementation 'org.projectlombok:lombok'
+	testImplementation 'com.h2database:h2'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	testImplementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 dependencyManagement {

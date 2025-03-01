@@ -2,7 +2,9 @@ package cargo.kityk.wms.order;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 
+@Import(TestConfiguration.class)
 @SpringBootTest
 class OrderApplicationTests {
 
