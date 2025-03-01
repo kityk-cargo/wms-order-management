@@ -1,6 +1,7 @@
 package cargo.kityk.wms.order
 
 import cargo.kityk.wms.order.dto.*
+import groovy.transform.CompileStatic
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
@@ -19,8 +20,10 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 
+import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
+@CompileStatic
 @RestController
 @RequestMapping("/orders")
 @Tag(name = "Order Management", description = "APIs for managing customer orders")
