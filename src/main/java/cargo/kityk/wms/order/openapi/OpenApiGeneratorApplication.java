@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Profile;
     org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration.class,
     org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration.class
 })
-@ComponentScan(basePackages = {"cargo.kityk.wms.order.controller", "cargo.kityk.wms.order.dto", "cargo.kityk.wms.order.config"}) // Ensure we scan all components
+@ComponentScan(basePackages = {"cargo.kityk.wms.order.controller", "cargo.kityk.wms.order.dto", "cargo.kityk.wms.order.config"})
 public class OpenApiGeneratorApplication {
     public static void main(String[] args) {
         SpringApplication app = new SpringApplication(OpenApiGeneratorApplication.class);
