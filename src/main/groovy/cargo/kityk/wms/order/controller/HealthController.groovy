@@ -1,4 +1,4 @@
-package cargo.kityk.wms.order
+package cargo.kityk.wms.order.controller
 
 import groovy.transform.CompileStatic
 import org.springframework.web.bind.annotation.RestController

@@ -1,4 +1,4 @@
-package cargo.kityk.wms.order
+package cargo.kityk.wms.order.controller
 
 import cargo.kityk.wms.order.dto.*
 import groovy.transform.CompileStatic

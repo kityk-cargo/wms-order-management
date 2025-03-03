@@ -1,5 +1,6 @@
 package cargo.kityk.wms.order;
 
+import cargo.kityk.wms.order.application.OrderApplication;
 import cargo.kityk.wms.order.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -17,8 +18,9 @@ import java.util.Collections;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+
+@SpringBootTest(classes = TestConfiguration.class)
 @Import(TestConfiguration.class)
-@SpringBootTest
 @AutoConfigureMockMvc
 public class OrderControllerTests {
 
