@@ -105,7 +105,7 @@ jobs:
       - name: Generate OpenAPI schema
         run: |
           # Use springdoc-openapi-gradle-plugin
-          ./gradlew generateOpenApiDocs -Pspring.profiles.active=openapi || true
+          ./gradlew generateOpenApiDocs || true
           
           # Check if the OpenAPI docs were generated
           if [ -f "build/api-docs/openapi.json" ]; then

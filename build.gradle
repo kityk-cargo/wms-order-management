@@ -150,6 +150,6 @@ openApi {
 	apiDocsUrl = "http://localhost:8080/docs"
 	customBootRun {
 		mainClass = 'cargo.kityk.wms.order.openapi.OpenApiGeneratorApplication'
-		args = ['--spring.profiles.active=test']
+		args = ['--spring.profiles.active=test,openapi']
 	}
 }
