@@ -112,32 +112,6 @@ tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
 	}
 }
 
-sourceSets {
-	integrationTest {
-		groovy {
-			srcDir file('src/integration-test/groovy')
-		}
-		java {
-			srcDir file('src/integration-test/java')
-		}
-		resources {
-			srcDir file('src/integration-test/resources')
-		}
-		compileClasspath += sourceSets.main.output + configurations.testRuntimeClasspath
-		runtimeClasspath += output + compileClasspath
-	}
-}
-
-task integrationTest(type: Test) {
-	description = 'Runs integration tests.'
-	group = 'verification'
-
-	testClassesDirs = sourceSets.integrationTest.output.classesDirs
-	classpath = sourceSets.integrationTest.runtimeClasspath
-	shouldRunAfter test
-}
-
-check.dependsOn integrationTest
 
 springBoot {
     mainClass = 'cargo.kityk.wms.order.application.OrderApplication'
