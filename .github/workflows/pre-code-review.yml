@@ -37,6 +37,7 @@ jobs:
     env:
       SPRING_PROFILES_ACTIVE: test
       LIQUIBASE_CHANGELOG: wms-main/liquibase/db/changelog.xml
+      LIQUIBASE_SEARCH_PATH: ./wms-main/liquibase/db
       TESTCONTAINERS_RYUK_DISABLED: "true"
 
   code-quality:
