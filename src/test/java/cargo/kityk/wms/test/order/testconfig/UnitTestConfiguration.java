@@ -1,36 +1,25 @@
-package cargo.kityk.wms.order;
+package cargo.kityk.wms.test.order.testconfig;
 
-import cargo.kityk.wms.order.application.OrderApplication;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
 
-@SpringBootApplication(exclude = LiquibaseAutoConfiguration.class)
-@ComponentScan(basePackages = "cargo.kityk.wms.order")
-@EntityScan("cargo.kityk.wms.order.entity")
-@EnableTransactionManagement
+@TestConfiguration
 @ActiveProfiles("test")
-public class TestConfiguration {
+public class UnitTestConfiguration {
 
     @Bean
-    @Primary
+    @Qualifier("testDataSource")
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.h2.Driver");
@@ -40,19 +29,19 @@ public class TestConfiguration {
         dataSource.setPassword("");
         return dataSource;
     }
-    
+
     @Bean
-    @Primary
+    @Qualifier("testEntityManagerFactory")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         vendorAdapter.setGenerateDdl(true);
         vendorAdapter.setShowSql(true);
-        
+
         LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
         factory.setJpaVendorAdapter(vendorAdapter);
         factory.setPackagesToScan("cargo.kityk.wms.order.entity");
         factory.setDataSource(dataSource());
-        
+
         Map<String, Object> properties = new HashMap<>();
         properties.put("hibernate.hbm2ddl.auto", "create-drop");
         properties.put("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
@@ -61,20 +50,16 @@ public class TestConfiguration {
         // Added default_schema property
         properties.put("hibernate.default_schema", "WMS_SCHEMA");
         factory.setJpaPropertyMap(properties);
-        
+
         return factory;
     }
-    
+
     @Bean
-    @Primary
+    @Qualifier("testTransactionManager")
     public PlatformTransactionManager transactionManager() {
         JpaTransactionManager txManager = new JpaTransactionManager();
         txManager.setEntityManagerFactory(entityManagerFactory().getObject());
         return txManager;
     }
 
-    // Main method to allow standalone test configuration
-    public static void main(String[] args) {
-        SpringApplication.run(OrderApplication.class, args);
-    }
 }

@@ -1,0 +1,24 @@
+spring:
+  
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+        generate_statistics: true
+    show-sql: true
+  
+  liquibase:
+    enabled: true
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.springframework.jdbc.datasource.init: DEBUG
+    liquibase: INFO
+
+
