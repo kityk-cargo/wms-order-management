@@ -63,7 +63,7 @@ public class RepositoryIntegrationTest {
         
         if (envChangelogPath != null && !envChangelogPath.isEmpty()) {
             // Use the environment variable if defined
-            changelogPath = Paths.get(envChangelogPath).toAbsolutePath().toString();
+            changelogPath = "file:"+Paths.get(envChangelogPath).toAbsolutePath().toString();
         } else {
             // Use the default path resolution if env variable is not defined
             Path path = Paths.get(System.getProperty("user.dir"))
