@@ -5,37 +5,38 @@ import cargo.kityk.wms.order.entity.Customer;
 import cargo.kityk.wms.order.entity.Order;
 import cargo.kityk.wms.order.entity.OrderItem;
 import cargo.kityk.wms.order.entity.Payment;
-import org.junit.Ignore;
+import cargo.kityk.wms.test.order.testconfig.LiquibaseFileConfig;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = OrderApplication.class)
 @ActiveProfiles("dbIntegrationTest")
 @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.ANNOTATION, classes = TestConfiguration.class))
+@Import(LiquibaseFileConfig.class)
 @Testcontainers
 @Transactional
 public class RepositoryIntegrationTest {
@@ -51,30 +52,8 @@ public class RepositoryIntegrationTest {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
         registry.add("spring.jpa.database-platform", () -> "org.hibernate.dialect.PostgreSQLDialect");
 
-        // Enable Liquibase
-        registry.add("spring.liquibase.enabled", () -> "true");
-
-        // Get the absolute path to Liquibase changelog.xml
-        String changelogPath;
-        String envChangelogPath = System.getenv("LIQUIBASE_CHANGELOG");
-        
-        if (envChangelogPath != null && !envChangelogPath.isEmpty()) {
-            // Use the environment variable if defined
-            changelogPath = "file:"+Paths.get(envChangelogPath).toAbsolutePath().toString();
-        } else {
-            // Use the default path resolution if env variable is not defined
-            Path path = Paths.get(System.getProperty("user.dir"))
-                .getParent()  // Move up to the parent directory (to get out of the microservice folder)
-                .resolve("wms-main/liquibase/db/changelog.xml")  // Adjust the path to the Liquibase changelog
-                .toAbsolutePath();  // Convert to absolute path
-            changelogPath = "file:" + path.toString();
-        }
-
-        // Set the Liquibase change-log property
-        registry.add("spring.liquibase.change-log", () -> changelogPath);
     }
 
     @Autowired
@@ -107,7 +86,7 @@ public class RepositoryIntegrationTest {
                 .phone("123-456-7890")
                 .address("123 Test Street")
                 .build();
-        customerRepository.save(testCustomer);
+        customerRepository.save(testCustomer) ;
 
         // Create test order
         testOrder = Order.builder()
@@ -173,9 +152,7 @@ public class RepositoryIntegrationTest {
         assertFalse(customerPendingOrders.isEmpty());
     }
 
-    @Test 
-    @Disabled("Need to set up liquibase products before enabling this test")
-     //todo fix this test by setting up the liquibase products when the tests would be rewritten
+    @Test
     void testOrderItemRepository() {
         // Create test order item
         OrderItem item = OrderItem.builder()

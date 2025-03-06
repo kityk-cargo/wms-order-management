@@ -75,6 +75,12 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 
+// Add classpath inclusion for testing across all operating systems
+tasks.withType(Test) {
+	def liquibaseTestPath = System.getenv("LIQUIBASE_TEST_CLASSPATH") ?: "$projectDir/../wms-main/liquibase"
+	classpath += files(liquibaseTestPath)
+}
+
 tasks.withType(JavaCompile) {
     options.compilerArgs += ['-parameters']
 }
