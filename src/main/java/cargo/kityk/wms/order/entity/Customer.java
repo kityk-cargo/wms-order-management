@@ -44,4 +44,4 @@ public class Customer {
     protected void onUpdate() {
         updatedAt = ZonedDateTime.now();
     }
-} 
+}
