@@ -70,34 +70,34 @@ public class OrderServiceTest {
     
     // Utility methods for creating test objects
     private Customer createCustomer(Long id) {
-        return Customer.builder()
-                .id(id)
-                .name("Test Customer")
-                .email("test@example.com")
-                .build();
+        Customer customer = new Customer();
+        customer.setId(id);
+        customer.setName("Test Customer");
+        customer.setEmail("test@example.com");
+        return customer;
     }
     
     private Order createBasicOrder(Long id, Customer customer, String status) {
-        return Order.builder()
-                .id(id)
-                .customer(customer)
-                .status(status)
-                .orderDate(testTime)
-                .totalAmount(BigDecimal.ZERO)
-                .items(new ArrayList<>())
-                .createdAt(testTime)
-                .updatedAt(testTime)
-                .build();
+        Order order = new Order();
+        order.setId(id);
+        order.setCustomer(customer);
+        order.setStatus(status);
+        order.setOrderDate(testTime);
+        order.setTotalAmount(BigDecimal.ZERO);
+        order.setItems(new ArrayList<>());
+        order.setCreatedAt(testTime);
+        order.setUpdatedAt(testTime);
+        return order;
     }
     
     private OrderItem createOrderItem(Order order, Long productId, int quantity) {
-        return OrderItem.builder()
-                .id(productId)
-                .order(order)
-                .productId(productId)
-                .quantity(quantity)
-                .price(ITEM_PRICE)
-                .build();
+        OrderItem item = new OrderItem();
+        item.setId(productId);
+        item.setOrder(order);
+        item.setProductId(productId);
+        item.setQuantity(quantity);
+        item.setPrice(ITEM_PRICE);
+        return item;
     }
     
     private void addItemsToOrder(Order order, int itemCount) {

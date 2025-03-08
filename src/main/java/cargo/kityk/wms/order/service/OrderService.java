@@ -44,14 +44,13 @@ public class OrderService {
         Customer customer = customerRepository.findById(orderCreateDTO.getCustomerId())
             .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + orderCreateDTO.getCustomerId()));
             
-        // Create new order
-        Order newOrder = Order.builder()
-            .customer(customer)
-            .orderDate(ZonedDateTime.now())
-            .status("Pending")
-            .totalAmount(BigDecimal.ZERO) // Will be calculated based on items
-            .items(new ArrayList<>())
-            .build();
+        // Create new order using setters instead of builder
+        Order newOrder = new Order();
+        newOrder.setCustomer(customer);
+        newOrder.setOrderDate(ZonedDateTime.now());
+        newOrder.setStatus("Pending");
+        newOrder.setTotalAmount(BigDecimal.ZERO);
+        newOrder.setItems(new ArrayList<>());
             
         // Add order items
         if (orderCreateDTO.getItems() != null && !orderCreateDTO.getItems().isEmpty()) {
@@ -62,12 +61,12 @@ public class OrderService {
                 BigDecimal itemPrice = new BigDecimal("29.99"); // Simulated price
                 BigDecimal itemTotal = itemPrice.multiply(new BigDecimal(itemDTO.getQuantity()));
                 
-                OrderItem item = OrderItem.builder()
-                    .order(newOrder)
-                    .productId(itemDTO.getProductId())
-                    .quantity(itemDTO.getQuantity())
-                    .price(itemPrice)
-                    .build();
+                // Build order item using setters
+                OrderItem item = new OrderItem();
+                item.setOrder(newOrder);
+                item.setProductId(itemDTO.getProductId());
+                item.setQuantity(itemDTO.getQuantity());
+                item.setPrice(itemPrice);
                 
                 newOrder.addOrderItem(item);
                 totalAmount = totalAmount.add(itemTotal);
