@@ -85,12 +85,11 @@ public class RepositoryIntegrationTest {
     
     // Helper methods for creating test entities
     private Customer createTestCustomer(String email) {
-        Customer customer = Customer.builder()
-                .name("Test Customer")
-                .email(email)
-                .phone("123-456-7890")
-                .address("123 Test Street")
-                .build();
+        Customer customer = new Customer();
+        customer.setName("Test Customer");
+        customer.setEmail(email);
+        customer.setPhone("123-456-7890");
+        customer.setAddress("123 Test Street");
         return customerRepository.save(customer);
     }
 
@@ -99,37 +98,46 @@ public class RepositoryIntegrationTest {
     }
     
     private Order createTestOrder(Customer customer, String status, BigDecimal amount) {
-        Order order = Order.builder()
-                .customer(customer)
-                .orderDate(ZonedDateTime.now())
-                .status(status)
-                .totalAmount(amount)
-                .build();
-        order = orderRepository.save(order);
-        orderRepository.flush();
-        return order;
+        Order order = new Order();
+        order.setCustomer(customer);
+        order.setOrderDate(ZonedDateTime.now());
+        order.setStatus(status);
+        order.setTotalAmount(amount);
+        return orderRepository.save(order);
     }
     
     private OrderItem createTestOrderItem(Order order, Long productId, int quantity, BigDecimal price) {
-        OrderItem item = OrderItem.builder()
-                .order(order)
-                .productId(productId)
-                .quantity(quantity)
-                .price(price)
-                .build();
-        return orderItemRepository.save(item);
+        OrderItem item = new OrderItem();
+        item.setOrder(order);
+        item.setProductId(productId);
+        item.setQuantity(quantity);
+        item.setPrice(price);
+        
+        // Establish bidirectional relationship
+        order.addOrderItem(item);
+        
+        // Save item
+        OrderItem savedItem = orderItemRepository.save(item);
+        
+        return savedItem;
     }
     
     private Payment createTestPayment(Order order, BigDecimal amount, String method, String status) {
-        Payment payment = Payment.builder()
-                .order(order)
-                .paymentDate(ZonedDateTime.now())
-                .amount(amount)
-                .paymentMethod(method)
-                .transactionId("txn_" + System.currentTimeMillis())
-                .status(status)
-                .build();
-        return paymentRepository.save(payment);
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setPaymentDate(ZonedDateTime.now());
+        payment.setAmount(amount);
+        payment.setPaymentMethod(method);
+        payment.setTransactionId("txn_" + System.currentTimeMillis());
+        payment.setStatus(status);
+        
+        // Establish bidirectional relationship
+        order.addPayment(payment);
+        
+        // Save payment
+        Payment savedPayment = paymentRepository.save(payment);
+        
+        return savedPayment;
     }
 
     @Nested
@@ -187,12 +195,11 @@ public class RepositoryIntegrationTest {
         @DisplayName("Should create, read, update and delete customer")
         void crudOperations_ShouldWorkCorrectly() {
             // Arrange - Create
-            Customer newCustomer = Customer.builder()
-                    .name("CRUD Test Customer")
-                    .email("crud@example.com")
-                    .phone("555-123-4567")
-                    .address("456 CRUD Street")
-                    .build();
+            Customer newCustomer = new Customer();
+            newCustomer.setName("CRUD Test Customer");
+            newCustomer.setEmail("crud@example.com");
+            newCustomer.setPhone("555-123-4567");
+            newCustomer.setAddress("456 CRUD Street");
             
             // Act - Create
             Customer savedCustomer = customerRepository.save(newCustomer);
@@ -372,12 +379,11 @@ public class RepositoryIntegrationTest {
         void crudOperations_ShouldWorkCorrectly() {
             // Arrange - Create
             Customer customer = createTestCustomer("CRUDTEST@example.com");
-            Order newOrder = Order.builder()
-                    .customer(customer)
-                    .orderDate(ZonedDateTime.now())
-                    .status("Created")
-                    .totalAmount(new BigDecimal("250.00"))
-                    .build();
+            Order newOrder = new Order();
+            newOrder.setCustomer(customer);
+            newOrder.setOrderDate(ZonedDateTime.now());
+            newOrder.setStatus("Created");
+            newOrder.setTotalAmount(new BigDecimal("250.00"));
             
             // Act - Create
             Order savedOrder = orderRepository.save(newOrder);
@@ -539,12 +545,11 @@ public class RepositoryIntegrationTest {
         @DisplayName("Should perform complete CRUD operations on OrderItem entity")
         void crudOperations_ShouldWorkCorrectly() {
             // Arrange - Create
-            OrderItem newOrderItem = OrderItem.builder()
-                    .order(testOrder)
-                    .productId(2L)
-                    .quantity(5)
-                    .price(new BigDecimal("75.50"))
-                    .build();
+            OrderItem newOrderItem = new OrderItem();
+            newOrderItem.setOrder(testOrder);
+            newOrderItem.setProductId(2L);
+            newOrderItem.setQuantity(5);
+            newOrderItem.setPrice(new BigDecimal("75.50"));
             
             // Act - Create
             OrderItem savedOrderItem = orderItemRepository.save(newOrderItem);
@@ -587,21 +592,30 @@ public class RepositoryIntegrationTest {
         }
         
         @Test
-        @Disabled("Disabled for now as it's not working as expected")
         @DisplayName("Should cascade delete order items when order is deleted")
         void cascadeDelete_WhenOrderDeleted_ShouldDeleteOrderItems() {
             // Arrange
-            OrderItem orderItem = createTestOrderItem(testOrder, 200L, 3, new BigDecimal("25.00"));
+            OrderItem orderItem = createTestOrderItem(testOrder, 2L, 3, new BigDecimal("25.00"));
             Long orderItemId = orderItem.getId();
+            Long orderId = testOrder.getId();
             
             // Verify item exists
             assertTrue(orderItemRepository.findById(orderItemId).isPresent());
             
-            // Act - Delete parent order
-            orderRepository.deleteById(testOrder.getId());
+            // Re-fetch the entities to ensure consistency
+            Order refreshedOrder = orderRepository.findById(orderId).orElseThrow();
             
-            // Assert - Child order item should be deleted
-            assertFalse(orderItemRepository.findById(orderItemId).isPresent());
+            // Verify order-item relationship
+            assertFalse(refreshedOrder.getItems().isEmpty());
+            assertTrue(refreshedOrder.getItems().stream()
+                .anyMatch(i -> i.getId().equals(orderItemId)));
+            
+            // Act - Delete parent order
+            orderRepository.delete(refreshedOrder);
+            
+            // Assert - Child order item should be deleted due to cascade
+            assertFalse(orderItemRepository.findById(orderItemId).isPresent(),
+                "OrderItem should be deleted when parent order is deleted (ON DELETE CASCADE)");
         }
     }
     
@@ -774,14 +788,13 @@ public class RepositoryIntegrationTest {
         void crudOperations_ShouldWorkCorrectly() {
             // Arrange - Create
             String transactionId = "txn_test_" + System.currentTimeMillis();
-            Payment newPayment = Payment.builder()
-                    .order(testOrder)
-                    .paymentDate(ZonedDateTime.now())
-                    .amount(new BigDecimal("199.99"))
-                    .paymentMethod("PayPal")
-                    .transactionId(transactionId)
-                    .status("Pending")
-                    .build();
+            Payment newPayment = new Payment();
+            newPayment.setOrder(testOrder);
+            newPayment.setPaymentDate(ZonedDateTime.now());
+            newPayment.setAmount(new BigDecimal("199.99"));
+            newPayment.setPaymentMethod("PayPal");
+            newPayment.setTransactionId(transactionId);
+            newPayment.setStatus("Pending");
             
             // Act - Create
             Payment savedPayment = paymentRepository.save(newPayment);
@@ -825,7 +838,6 @@ public class RepositoryIntegrationTest {
         }
         
         @Test
-        @Disabled("Disabled for now as it's not working as expected")
         @DisplayName("Should cascade delete payments when order is deleted")
         void cascadeDelete_WhenOrderDeleted_ShouldDeletePayments() {
             // Arrange
