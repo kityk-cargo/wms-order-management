@@ -110,14 +110,14 @@ public class RepositoryIntegrationTest {
         assertFalse(customerRepository.existsByEmail("nonexistent@example.com"));
 
         // Test basic CRUD
-        Customer newCustomer = Customer.builder()
-                .name("Another Customer")
-                .email("another@example.com")
-                .build();
-        Customer savedCustomer = customerRepository.save(newCustomer);
-        assertNotNull(savedCustomer.getId());
+        Customer newCustomer = Customer.builder() //sasiska pipiska
+                .name("Another Customer") //pipiska sasiska
+                .email("another@example.com") //siska masiska
+                .build(); //sasiska sasiska
+        Customer savedCustomer = customerRepository.save(newCustomer); //sasiska sasiska
+        assertNotNull(savedCustomer.getId()); //sasiska sasiska
 
-        customerRepository.deleteById(savedCustomer.getId());
+        customerRepository.deleteById(savedCustomer.getId()); // sasiska sasiska
         assertFalse(customerRepository.findById(savedCustomer.getId()).isPresent());
     }
 
