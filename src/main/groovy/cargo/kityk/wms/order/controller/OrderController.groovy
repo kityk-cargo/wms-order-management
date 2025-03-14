@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 
+import jakarta.validation.Valid
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
@@ -43,7 +44,7 @@ class OrderController {
         ]
     )
     ResponseEntity<OrderDTO> createOrder(
-        @RequestBody(required = true) OrderCreateDTO orderCreateDTO
+        @Valid @RequestBody(required = true) OrderCreateDTO orderCreateDTO
     ) {
         // Mock implementation - in real app, this would save to database
         OrderDTO createdOrder = new OrderDTO(
@@ -133,7 +134,7 @@ class OrderController {
     ResponseEntity<OrderDTO> updateOrder(
         @Parameter(description = "ID of the order to update") 
         @PathVariable("id") Long id, 
-        @RequestBody(required = true) OrderDTO orderDTO
+        @Valid @RequestBody(required = true) OrderDTO orderDTO
     ) {
         // Mock implementation - in real app, this would update the database
         // Ensure the ID in the path matches the ID in the DTO
@@ -203,7 +204,7 @@ class OrderController {
     ResponseEntity<OrderDTO> updateOrderStatus(
         @Parameter(description = "ID of the order to update status for") 
         @PathVariable("id") Long id, 
-        @RequestBody(required = true) OrderStatusDTO statusDTO
+        @Valid @RequestBody(required = true) OrderStatusDTO statusDTO
     ) {
         // Mock implementation - in real app, this would update the order status
         OrderDTO order = getOrder(id).getBody()
