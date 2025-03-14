@@ -1,19 +1,15 @@
 package cargo.kityk.wms.order.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import cargo.kityk.wms.order.dto.base.BaseOrderItemDTO;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
-public class OrderItemCreateDTO {
-    @Schema(description = "Product ID to order", example = "1")
-    private Long productId;
-    
-    @Schema(description = "Quantity of product to order", example = "5")
-    private Integer quantity;
-} 
+@EqualsAndHashCode(callSuper = true)
+public class OrderItemCreateDTO extends BaseOrderItemDTO {
+    // All fields are inherited from BaseOrderItemDTO
+}

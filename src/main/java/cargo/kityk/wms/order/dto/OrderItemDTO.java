@@ -1,27 +1,26 @@
 package cargo.kityk.wms.order.dto;
 
+import cargo.kityk.wms.order.dto.base.BaseOrderItemDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 
 @Data
-@Builder
+@SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor
-public class OrderItemDTO {
+@EqualsAndHashCode(callSuper = true)
+public class OrderItemDTO extends BaseOrderItemDTO {
     @Schema(description = "Order item ID", example = "1")
     private Long id;
     
-    @Schema(description = "Product ID", example = "1")
-    private Long productId;
-    
-    @Schema(description = "Quantity of product ordered", example = "5")
-    private Integer quantity;
-    
+    @NotNull
+    @DecimalMin(value = "0.01", message = "Price must be greater than zero")
     @Schema(description = "Price per unit at time of order", example = "29.99")
     private BigDecimal price;
-} 
+}
