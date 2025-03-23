@@ -26,7 +26,7 @@ import java.time.ZonedDateTime
 
 @CompileStatic
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/api/v1/orders")
 @Tag(name = "Order Management", description = "APIs for managing customer orders")
 class OrderController {
 

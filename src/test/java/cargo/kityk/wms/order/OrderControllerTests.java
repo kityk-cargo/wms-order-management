@@ -25,6 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 public class OrderControllerTests {
 
+    private static final String BASE_URL = "/api/v1/orders";
+    
     @Autowired
     private MockMvc mockMvc;
     
@@ -47,7 +49,7 @@ public class OrderControllerTests {
                 
         String jsonContent = objectMapper.writeValueAsString(orderCreate);
         
-        mockMvc.perform(post("/orders")
+        mockMvc.perform(post(BASE_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonContent))
                 .andExpect(status().isCreated())
@@ -58,7 +60,7 @@ public class OrderControllerTests {
     @Test
     @DisplayName("Should return an empty array of orders with 200 OK status")
     void testGetOrders() throws Exception {
-        mockMvc.perform(get("/orders"))
+        mockMvc.perform(get(BASE_URL))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$.length()").value(0));
@@ -67,7 +69,7 @@ public class OrderControllerTests {
     @Test
     @DisplayName("Should return a specific order by ID with 200 OK status")
     void testGetOrder() throws Exception {
-        mockMvc.perform(get("/orders/1"))
+        mockMvc.perform(get(BASE_URL + "/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1));
     }
@@ -93,7 +95,7 @@ public class OrderControllerTests {
                 
         String jsonContent = objectMapper.writeValueAsString(orderDTO);
         
-        mockMvc.perform(put("/orders/1")
+        mockMvc.perform(put(BASE_URL + "/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonContent))
                 .andExpect(status().isOk())
@@ -103,14 +105,14 @@ public class OrderControllerTests {
     @Test
     @DisplayName("Should delete an order and return 204 No Content status")
     void testDeleteOrder() throws Exception {
-        mockMvc.perform(delete("/orders/1"))
+        mockMvc.perform(delete(BASE_URL + "/1"))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("Should allocate inventory for an order and return 200 OK status")
     void testAllocateInventory() throws Exception {
-        mockMvc.perform(post("/orders/1/allocate"))
+        mockMvc.perform(post(BASE_URL + "/1/allocate"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("Allocated"));
     }
@@ -125,7 +127,7 @@ public class OrderControllerTests {
                 
         String jsonContent = objectMapper.writeValueAsString(statusDTO);
         
-        mockMvc.perform(put("/orders/1/status")
+        mockMvc.perform(put(BASE_URL + "/1/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonContent))
                 .andExpect(status().isOk())
