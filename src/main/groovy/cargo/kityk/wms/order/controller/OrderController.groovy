@@ -24,11 +24,19 @@ import jakarta.validation.Valid
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
+import cargo.kityk.wms.order.service.OrderService
+
 @CompileStatic
 @RestController
 @RequestMapping("/api/v1/orders")
 @Tag(name = "Order Management", description = "APIs for managing customer orders")
 class OrderController {
+
+    private final OrderService orderService
+
+    OrderController(OrderService orderService) {
+        this.orderService = orderService
+    }
 
     @PostMapping
     @Operation(
@@ -46,25 +54,7 @@ class OrderController {
     ResponseEntity<OrderDTO> createOrder(
         @Valid @RequestBody(required = true) OrderCreateDTO orderCreateDTO
     ) {
-        // Mock implementation - in real app, this would save to database
-        OrderDTO createdOrder = new OrderDTO(
-            id: 1L,
-            customerId: orderCreateDTO.customerId,
-            orderDate: ZonedDateTime.now(),
-            status: "Pending",
-            totalAmount: calculateTotalAmount(orderCreateDTO.items),
-            items: orderCreateDTO.getItems().collect { item ->
-                new OrderItemDTO(
-                    id: 1L,
-                    productId: item.productId,
-                    quantity: item.quantity,
-                    price: 0.0 // In real app, would lookup price from product service
-                )
-            },
-            createdAt: ZonedDateTime.now(),
-            updatedAt: ZonedDateTime.now()
-        )
-        
+        OrderDTO createdOrder = orderService.createOrder(orderCreateDTO)
         return new ResponseEntity<>(createdOrder, HttpStatus.CREATED)
     }
 
@@ -81,8 +71,7 @@ class OrderController {
         ]
     )
     ResponseEntity<List<OrderDTO>> getOrders() {
-        // Mock implementation - in real app, this would query the database
-        List<OrderDTO> orders = []
+        List<OrderDTO> orders = orderService.getAllOrders()
         return ResponseEntity.ok(orders)
     }
 
@@ -103,18 +92,12 @@ class OrderController {
         @Parameter(description = "ID of the order to retrieve") 
         @PathVariable("id") Long id
     ) {
-        // Mock implementation - in real app, this would query the database
-        OrderDTO order = new OrderDTO(
-            id: id,
-            customerId: 1L,
-            orderDate: ZonedDateTime.now(),
-            status: "Pending",
-            totalAmount: 0.0,
-            items: [],
-            createdAt: ZonedDateTime.now(),
-            updatedAt: ZonedDateTime.now()
-        )
-        return ResponseEntity.ok(order)
+        OrderDTO order = orderService.getOrder(id)
+        if (order != null) { //todo throw exception?
+            return ResponseEntity.ok(order)
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
+        }
     }
 
     @PutMapping("/{id}")
@@ -136,12 +119,8 @@ class OrderController {
         @PathVariable("id") Long id, 
         @Valid @RequestBody(required = true) OrderDTO orderDTO
     ) {
-        // Mock implementation - in real app, this would update the database
-        // Ensure the ID in the path matches the ID in the DTO
-        orderDTO.id = id
-        orderDTO.updatedAt = ZonedDateTime.now()
-        
-        return ResponseEntity.ok(orderDTO)
+        OrderDTO updatedOrder = orderService.updateOrder(id, orderDTO)
+        return ResponseEntity.ok(updatedOrder)
     }
 
     @DeleteMapping("/{id}")
@@ -157,7 +136,7 @@ class OrderController {
         @Parameter(description = "ID of the order to delete") 
         @PathVariable("id") Long id
     ) {
-        // Mock implementation - in real app, this would delete from database
+        orderService.deleteOrder(id)
         return ResponseEntity.noContent().build()
     }
 
@@ -212,12 +191,5 @@ class OrderController {
         order.updatedAt = ZonedDateTime.now()
         
         return ResponseEntity.ok(order)
-    }
-    
-    // Helper method to calculate total amount
-    private BigDecimal calculateTotalAmount(List<OrderItemCreateDTO> items) {
-        // In a real implementation, this would lookup product prices
-        // For now, just return a dummy value
-        return 0.0
     }
 }
