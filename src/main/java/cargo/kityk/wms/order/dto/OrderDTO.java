@@ -58,10 +58,6 @@ public class OrderDTO extends BaseDBEntityDTO {
            allowableValues = {"Pending", "Allocated", "Processing", "Shipped", "Delivered", "Cancelled"})
     private String status;
     
-    @Valid
-    @Schema(description = "Order status details")
-    private OrderStatusDTO statusDetails;
-    
     @DecimalMin(value = "0.0", inclusive = true)
     @Schema(description = "Total order amount", example = "149.95")
     private BigDecimal totalAmount;
