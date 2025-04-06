@@ -2,6 +2,7 @@ package cargo.kityk.wms.order.controller
 
 import cargo.kityk.wms.order.dto.*
 import groovy.transform.CompileStatic
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RestController
@@ -32,11 +33,8 @@ import cargo.kityk.wms.order.service.OrderService
 @Tag(name = "Order Management", description = "APIs for managing customer orders")
 class OrderController {
 
-    private final OrderService orderService
-
-    OrderController(OrderService orderService) {
-        this.orderService = orderService
-    }
+    @Autowired
+    private OrderService orderService
 
     @PostMapping
     @Operation(
