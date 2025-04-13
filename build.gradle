@@ -7,6 +7,7 @@ plugins {
 	id 'pmd'
 	id 'com.github.spotbugs' version '6.1.6'
 	id 'org.springdoc.openapi-gradle-plugin' version '1.8.0'
+	id 'au.com.dius.pact' version '4.6.1'
 }
 
 group = 'cargo.kityk.wms'
@@ -63,6 +64,10 @@ dependencies {
 	testImplementation 'org.testcontainers:postgresql:1.20.5'
 	
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+	// Pact dependencies for provider testing
+	testImplementation 'au.com.dius.pact.provider:junit5:4.6.1'
+	testImplementation 'au.com.dius.pact.provider:spring:4.6.1'
 }
 
 dependencyManagement {
@@ -132,4 +137,23 @@ openApi {
 		mainClass = 'cargo.kityk.wms.order.openapi.OpenApiGeneratorApplication'
 		args = ['--spring.profiles.active=test,openapi']
 	}
+}
+
+// Pact provider verification task configuration
+pact {
+    serviceProviders {
+        orderManagementProvider {
+            protocol = 'http'
+            host = 'localhost'
+            port = 8080
+            path = '/'
+
+            // Use local pact files instead of pact broker
+            hasPactsWith ('consumers') {
+				pactFileLocation = file('../wms-contracts/pact/rest/wms_order_management')
+
+				stateChangeUrl = url('http://localhost:8080/pact-states')
+			}
+        }
+    }
 }
