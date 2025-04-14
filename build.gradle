@@ -32,6 +32,7 @@ repositories {
 
 ext {
 	set('springCloudVersion', "2025.0.0-M1")
+	set('pactVersion', '4.6.7')
 }
 
 dependencies {
@@ -62,6 +63,10 @@ dependencies {
 	testImplementation 'org.testcontainers:junit-jupiter:1.20.5'
 	testImplementation 'org.testcontainers:postgresql:1.20.5'
 	
+	// Pact dependencies for provider testing
+	testImplementation "au.com.dius.pact.provider:junit5:${pactVersion}"
+	testImplementation "au.com.dius.pact.provider:spring:${pactVersion}"
+	
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -72,7 +77,9 @@ dependencyManagement {
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+	useJUnitPlatform {
+        excludeTags 'pact'
+    }
 }
 
 // Add classpath inclusion for testing across all operating systems
@@ -132,4 +139,56 @@ openApi {
 		mainClass = 'cargo.kityk.wms.order.openapi.OpenApiGeneratorApplication'
 		args = ['--spring.profiles.active=test,openapi']
 	}
+}
+
+// Custom Pact verification task
+task pactVerify(type: Test) {
+    description = 'Runs Pact verification tests using test-based approach'
+    group = 'verification'
+    
+    useJUnitPlatform {
+        includeTags 'pact'
+    }
+    
+    // Default to local path for Pact files
+    def pactFolderPath = project.hasProperty('pactFolderPath') ? 
+        project.getProperty('pactFolderPath') : 
+        "${rootProject.projectDir}/../wms-contracts/pact/rest/wms_order_management"
+    
+    // Enable more verbose debugging
+    systemProperty 'org.slf4j.simpleLogger.defaultLogLevel', 'debug'
+    systemProperty 'pact.showStacktrace', 'true'
+    systemProperty 'pact.verifier.disableApplicationXmlContentType', 'true'
+        
+    // Pact configuration
+    systemProperty 'pact.provider.version', project.version
+    systemProperty 'pact.verifier.publishResults', 'false'
+    systemProperty 'pact.folder.path', pactFolderPath
+    
+    // Spring profiles
+    systemProperty 'spring.profiles.active', 'test,dbIntegrationTest'
+    
+    // Point to existing wms-main changelog-test.xml
+    def liquibaseTestPath = System.getenv("LIQUIBASE_TEST_CLASSPATH") ?: "$projectDir/../wms-main/liquibase"
+    systemProperty 'spring.liquibase.change-log', "file:${liquibaseTestPath}/db/changelog-test.xml"
+    
+    // Set up JVM arguments for test
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+        showStandardStreams = true
+        showStackTraces = true
+    }
+    
+    // Increase heap size for tests
+    maxHeapSize = "1g"
+    
+    // Make sure this test runs in isolation
+    forkEvery = 1
+    
+    // Environment variable for Liquibase classpath
+    environment 'LIQUIBASE_TEST_CLASSPATH', liquibaseTestPath
+    
+    // Add wms-main/liquibase to the classpath
+    classpath += files(liquibaseTestPath)
 }

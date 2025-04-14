@@ -1,24 +1,41 @@
 spring:
+  # Database Configuration
+  datasource:
+    # These properties will be overridden by the dynamic properties from TestContainers
+    url: ${container.jdbc.url:jdbc:postgresql://localhost:5432/order_management_test}
+    username: ${container.jdbc.username:test}
+    password: ${container.jdbc.password:test}
+    driver-class-name: ${container.jdbc.driver:org.postgresql.Driver}
   
+  # JPA Configuration
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        show_sql: true
-        generate_statistics: true
-    show-sql: true
   
+  # Liquibase Configuration - will be overridden via system property
   liquibase:
     enabled: true
+    # No hard-coded path - set via system property in the Gradle task
+    contexts: test
 
+# Enable detailed logging for tests
 logging:
   level:
+    cargo.kityk.wms: DEBUG
+    org.springframework.test: INFO
     org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.springframework.jdbc.datasource.init: DEBUG
-    liquibase: INFO
+    liquibase: DEBUG
+    au.com.dius.pact: DEBUG
+    
+# Test-specific application properties
+app:
+  test:
+    pact:
+      enabled: true
 
 
