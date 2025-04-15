@@ -1,6 +1,7 @@
 package cargo.kityk.wms.order.controller
 
 import cargo.kityk.wms.order.dto.*
+import cargo.kityk.wms.order.service.OrderService
 import groovy.transform.CompileStatic
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -25,8 +26,6 @@ import jakarta.validation.Valid
 import java.time.LocalDateTime
 import java.time.ZonedDateTime
 
-import cargo.kityk.wms.order.service.OrderService
-
 @CompileStatic
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -46,7 +45,8 @@ class OrderController {
                 description = "Order created successfully",
                 content = @Content(schema = @Schema(implementation = OrderDTO.class))
             ),
-            @ApiResponse(responseCode = "400", description = "Invalid order data")
+            @ApiResponse(responseCode = "400", description = "Invalid order data"),
+            @ApiResponse(responseCode = "404", description = "Product not found")
         ]
     )
     ResponseEntity<OrderDTO> createOrder(
@@ -65,7 +65,8 @@ class OrderController {
                 responseCode = "200", 
                 description = "List of orders retrieved successfully",
                 content = @Content(schema = @Schema(implementation = OrderDTO.class))
-            )
+            ),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
         ]
     )
     ResponseEntity<List<OrderDTO>> getOrders() {
@@ -91,11 +92,7 @@ class OrderController {
         @PathVariable("id") Long id
     ) {
         OrderDTO order = orderService.getOrder(id)
-        if (order != null) { //todo throw exception?
-            return ResponseEntity.ok(order)
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null)
-        }
+        return ResponseEntity.ok(order)
     }
 
     @PutMapping("/{id}")
@@ -156,8 +153,10 @@ class OrderController {
         @Parameter(description = "ID of the order to allocate inventory for") 
         @PathVariable("id") Long id
     ) {
+        // Get the order - this will throw ResourceNotFoundException if not found
+        OrderDTO order = orderService.getOrder(id)
+        
         // Mock implementation - in real app, this would update inventory allocation
-        OrderDTO order = getOrder(id).getBody()
         order.status = "Allocated"
         order.updatedAt = ZonedDateTime.now()
         
@@ -183,8 +182,10 @@ class OrderController {
         @PathVariable("id") Long id, 
         @Valid @RequestBody(required = true) OrderStatusDTO statusDTO
     ) {
+        // Get the order - this will throw ResourceNotFoundException if not found
+        OrderDTO order = orderService.getOrder(id)
+        
         // Mock implementation - in real app, this would update the order status
-        OrderDTO order = getOrder(id).getBody()
         order.status = statusDTO.status
         order.updatedAt = ZonedDateTime.now()
         

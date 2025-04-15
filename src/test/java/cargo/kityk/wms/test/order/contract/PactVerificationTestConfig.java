@@ -12,6 +12,7 @@ import org.springframework.test.context.TestPropertySource;
 /**
  * Test configuration for Pact verification tests.
  * This configuration imports the LiquibaseFileConfig to reuse the database setup.
+ * Includes test controllers that can simulate different states for contract tests.
  */
 @TestConfiguration
 @Import(LiquibaseFileConfig.class)
@@ -39,4 +40,4 @@ public class PactVerificationTestConfig {
         logger.info("=== Pact Verification Test Configuration Loaded ===");
         return "pactConfigurationLoaded";
     }
-} 
+}
