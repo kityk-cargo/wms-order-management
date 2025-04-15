@@ -1,6 +1,7 @@
 package cargo.kityk.wms.order.controller
 
 import cargo.kityk.wms.order.dto.*
+import cargo.kityk.wms.order.exception.ServiceErrorResponse
 import cargo.kityk.wms.order.service.OrderService
 import groovy.transform.CompileStatic
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,8 +46,16 @@ class OrderController {
                 description = "Order created successfully",
                 content = @Content(schema = @Schema(implementation = OrderDTO.class))
             ),
-            @ApiResponse(responseCode = "400", description = "Invalid order data"),
-            @ApiResponse(responseCode = "404", description = "Product not found")
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Invalid order data",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Product not found",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            )
         ]
     )
     ResponseEntity<OrderDTO> createOrder(
@@ -66,7 +75,11 @@ class OrderController {
                 description = "List of orders retrieved successfully",
                 content = @Content(schema = @Schema(implementation = OrderDTO.class))
             ),
-            @ApiResponse(responseCode = "500", description = "Internal server error")
+            @ApiResponse(
+                responseCode = "500", 
+                description = "Internal server error",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            )
         ]
     )
     ResponseEntity<List<OrderDTO>> getOrders() {
@@ -84,7 +97,11 @@ class OrderController {
                 description = "Order retrieved successfully",
                 content = @Content(schema = @Schema(implementation = OrderDTO.class))
             ),
-            @ApiResponse(responseCode = "404", description = "Order not found")
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Order not found",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            )
         ]
     )
     ResponseEntity<OrderDTO> getOrder(
@@ -105,8 +122,16 @@ class OrderController {
                 description = "Order updated successfully",
                 content = @Content(schema = @Schema(implementation = OrderDTO.class))
             ),
-            @ApiResponse(responseCode = "400", description = "Invalid order data"),
-            @ApiResponse(responseCode = "404", description = "Order not found")
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Invalid order data",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Order not found",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            )
         ]
     )
     ResponseEntity<OrderDTO> updateOrder(
@@ -124,7 +149,11 @@ class OrderController {
         description = "Deletes an order from the system",
         responses = [
             @ApiResponse(responseCode = "204", description = "Order deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Order not found")
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Order not found",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            )
         ]
     )
     ResponseEntity<Void> deleteOrder(
@@ -145,8 +174,16 @@ class OrderController {
                 description = "Inventory allocated successfully",
                 content = @Content(schema = @Schema(implementation = OrderDTO.class))
             ),
-            @ApiResponse(responseCode = "404", description = "Order not found"),
-            @ApiResponse(responseCode = "400", description = "Insufficient inventory")
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Order not found",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Insufficient inventory",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            )
         ]
     )
     ResponseEntity<OrderDTO> allocateInventory(
@@ -173,8 +210,16 @@ class OrderController {
                 description = "Order status updated successfully",
                 content = @Content(schema = @Schema(implementation = OrderDTO.class))
             ),
-            @ApiResponse(responseCode = "400", description = "Invalid status"),
-            @ApiResponse(responseCode = "404", description = "Order not found")
+            @ApiResponse(
+                responseCode = "400", 
+                description = "Invalid status",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "404", 
+                description = "Order not found",
+                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+            )
         ]
     )
     ResponseEntity<OrderDTO> updateOrderStatus(

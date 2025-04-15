@@ -1,10 +1,10 @@
 package cargo.kityk.wms.order.exception;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
  * Standardized error response for the API.
@@ -15,7 +15,8 @@ public class ServiceErrorResponse {
     private final String error;
     private final int status;
     private final LocalDateTime timestamp;
-    
+
+    //todo: I won't touch it now since the common error format is in the pipeline
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private Map<String, Object> details;
 
