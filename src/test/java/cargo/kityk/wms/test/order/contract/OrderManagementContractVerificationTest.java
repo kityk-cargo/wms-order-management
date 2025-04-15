@@ -47,7 +47,7 @@ import java.util.Optional;
  * defined in the consumer contracts.
  */
 @Provider("wms_order_management")
-@PactFolder("../wms-contracts/pact/rest/wms_order_management")
+@PactFolder("${PACTFOLDER_PATH:../wms-contracts/pact/rest/wms_order_management}")
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         classes = {OrderApplication.class, PactVerificationTestConfig.class}
@@ -100,17 +100,17 @@ public class OrderManagementContractVerificationTest {
         }
         
         // Check if we need to use an alternative pact file location
-        String pactFolderOverride = System.getProperty("pact.folder.path");
-        logger.info("Pact folder override from system property: {}", pactFolderOverride);
+        String pactFolderPath = System.getProperty("pact.folder.path");
+        logger.info("Pact folder path from system property: {}", pactFolderPath);
         
-        if (pactFolderOverride != null && !pactFolderOverride.isEmpty()) {
-            Path overridePath = Paths.get(pactFolderOverride);
-            if (Files.exists(overridePath) && Files.isDirectory(overridePath)) {
-                logger.info("Using override Pact folder: {}", overridePath.toAbsolutePath());
+        if (pactFolderPath != null && !pactFolderPath.isEmpty()) {
+            Path pactPath = Paths.get(pactFolderPath);
+            if (Files.exists(pactPath) && Files.isDirectory(pactPath)) {
+                logger.info("Using Pact folder from system property: {}", pactPath.toAbsolutePath());
                 // Set the root directory for Pact files using system property
-                System.setProperty("pact.rootDir", pactFolderOverride);
+                System.setProperty("pact.rootDir", pactFolderPath);
             } else {
-                logger.error("Override Pact folder does not exist or is not a directory: {}", overridePath.toAbsolutePath());
+                logger.error("Pact folder specified by system property does not exist or is not a directory: {}", pactPath.toAbsolutePath());
             }
         }
         

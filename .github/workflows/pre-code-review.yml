@@ -95,8 +95,9 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Run Pact verification
-        run: ./gradlew pactVerify -PpactFolderPath=./wms-contracts/pact/rest/wms_order_management
+        run: ./gradlew pactVerify
         env:
+          PACTFOLDER_PATH: ./wms-contracts/pact/rest/wms_order_management
           SPRING_PROFILES_ACTIVE: test,dbIntegrationTest
           LIQUIBASE_TEST_CLASSPATH: wms-main/liquibase
           TESTCONTAINERS_RYUK_DISABLED: "true"
