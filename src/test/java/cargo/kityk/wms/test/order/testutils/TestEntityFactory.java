@@ -131,7 +131,6 @@ public class TestEntityFactory {
      */
     public static OrderItem createOrderItem(Order order, Long productId, int quantity) {
         OrderItem item = new OrderItem();
-        item.setId(productId);
         item.setOrder(order);
         item.setProductId(productId);
         item.setQuantity(quantity);
