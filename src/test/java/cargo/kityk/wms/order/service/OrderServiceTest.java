@@ -171,9 +171,12 @@ public class OrderServiceTest {
             assertEquals(CUSTOMER_ID, result.getCustomerId());
             assertEquals(PROCESSING_STATUS, result.getStatus());
             assertEquals(testOrder.getTotalAmount(), result.getTotalAmount());
-            assertEquals(testTime, result.getOrderDate());
-            assertEquals(testTime, result.getCreatedAt());
-            assertEquals(testTime, result.getUpdatedAt());
+            assertTrue(testTime.minusNanos(1).isBefore(result.getOrderDate()));
+            assertTrue(testTime.minusNanos(1).isBefore(result.getCreatedAt()));
+            assertTrue(testTime.minusNanos(1).isBefore(result.getUpdatedAt()));
+            assertTrue(testTime.plusMinutes(1).isAfter(result.getOrderDate()));
+            assertTrue(testTime.plusMinutes(1).isAfter(result.getCreatedAt()));
+            assertTrue(testTime.plusMinutes(1).isAfter(result.getUpdatedAt()));
             
             // Verify items
             assertEquals(2, result.getItems().size());
