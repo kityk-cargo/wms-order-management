@@ -21,10 +21,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor()
 public class OrderDTO extends BaseDBEntityDTO {
-    @Pattern(regexp = "^(ORD-)?[0-9]{4}-[0-9]{5,}$", message = "Invalid order reference format")
-    @Schema(description = "Order reference number", example = "ORD-2023-12345")
-    private String orderReference;
-    
     @NotNull(message = "Customer ID cannot be null")
     @Min(1)
     @Schema(description = "Customer ID", example = "1")

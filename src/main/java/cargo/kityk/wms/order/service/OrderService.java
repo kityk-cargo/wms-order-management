@@ -7,8 +7,11 @@ import cargo.kityk.wms.order.dto.OrderItemDTO;
 import cargo.kityk.wms.order.entity.Customer;
 import cargo.kityk.wms.order.entity.Order;
 import cargo.kityk.wms.order.entity.OrderItem;
+import cargo.kityk.wms.order.exception.ResourceNotFoundException;
 import cargo.kityk.wms.order.repository.CustomerRepository;
 import cargo.kityk.wms.order.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 @Service
 public class OrderService {
 
+    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     
@@ -37,12 +41,13 @@ public class OrderService {
      * 
      * @param orderCreateDTO Order creation data
      * @return Created order as DTO
+     * @throws ResourceNotFoundException if customer not found
      */
     @Transactional
     public OrderDTO createOrder(OrderCreateDTO orderCreateDTO) {
         // Validate customer exists
         Customer customer = customerRepository.findById(orderCreateDTO.getCustomerId())
-            .orElseThrow(() -> new RuntimeException("Customer not found with ID: " + orderCreateDTO.getCustomerId()));
+            .orElseThrow(() -> new ResourceNotFoundException("Customer", orderCreateDTO.getCustomerId()));
             
         // Create new order using setters instead of builder
         Order newOrder = new Order();
@@ -86,11 +91,13 @@ public class OrderService {
      * Retrieves an order by ID
      * 
      * @param orderId Order ID
-     * @return Order as DTO or null if not found
+     * @return Order as DTO
+     * @throws ResourceNotFoundException if order not found
      */
     public OrderDTO getOrder(Long orderId) {
-        Optional<Order> orderOptional = orderRepository.findById(orderId);
-        return orderOptional.map(this::mapOrderToDTO).orElse(null);
+        return orderRepository.findById(orderId)
+            .map(this::mapOrderToDTO)
+            .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
     }
     
     /**
@@ -99,11 +106,12 @@ public class OrderService {
      * @param orderId ID of order to update
      * @param orderDTO Updated order data
      * @return Updated order as DTO
+     * @throws ResourceNotFoundException if order not found
      */
     @Transactional
     public OrderDTO updateOrder(Long orderId, OrderDTO orderDTO) {
         Order existingOrder = orderRepository.findById(orderId)
-            .orElseThrow(() -> new RuntimeException("Order not found with ID: " + orderId));
+            .orElseThrow(() -> new ResourceNotFoundException("Order", orderId));
             
         // Update basic fields
         if (orderDTO.getStatus() != null) {
@@ -126,9 +134,14 @@ public class OrderService {
      * Deletes an order by ID
      * 
      * @param orderId ID of order to delete
+     * @throws ResourceNotFoundException if order not found
      */
     @Transactional
     public void deleteOrder(Long orderId) {
+        // Check if order exists before deleting
+        if (!orderRepository.existsById(orderId)) {
+            throw new ResourceNotFoundException("Order", orderId);
+        }
         orderRepository.deleteById(orderId);
     }
     

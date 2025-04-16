@@ -30,6 +30,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import cargo.kityk.wms.order.exception.ResourceNotFoundException;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Order Service Tests")
 public class OrderServiceTest {
@@ -239,17 +241,19 @@ public class OrderServiceTest {
         }
         
         @Test
-        @DisplayName("Test getOrder: Should return null when order not found")
+        @DisplayName("Test getOrder: Should throw ResourceNotFoundException when order not found")
         public void testGetOrder_NotFound() {
             // Arrange
             Long nonExistentOrderId = 999L;
             when(orderRepository.findById(nonExistentOrderId)).thenReturn(Optional.empty());
     
-            // Act
-            OrderDTO result = orderService.getOrder(nonExistentOrderId);
-    
-            // Assert
-            assertNull(result);
+            // Act & Assert
+            ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> orderService.getOrder(nonExistentOrderId)
+            );
+            
+            assertTrue(exception.getMessage().contains("Order not found"));
             verify(orderRepository).findById(nonExistentOrderId);
         }
     }
@@ -315,17 +319,32 @@ public class OrderServiceTest {
     @DisplayName("Order Deletion and Listing Operations")
     class DeleteAndListOrderTests {
         @Test
+        @DisplayName("Test deleteOrder: Should throw ResourceNotFoundException when order not found")
+        public void testDeleteOrder_NotFound() {
+            // Arrange
+            when(orderRepository.existsById(ORDER_ID)).thenReturn(false);
+    
+            // Act & Assert
+            ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> orderService.deleteOrder(ORDER_ID)
+            );
+            
+            assertTrue(exception.getMessage().contains("Order not found"));
+            verify(orderRepository, never()).deleteById(ORDER_ID);
+        }
+        
+        @Test
         @DisplayName("Test deleteOrder: Should successfully delete the order")
         public void testDeleteOrder_Success() {
             // Arrange
-            when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.empty());
+            when(orderRepository.existsById(ORDER_ID)).thenReturn(true);
     
             // Act
             orderService.deleteOrder(ORDER_ID);
-            OrderDTO result = orderService.getOrder(ORDER_ID);
     
             // Assert
-            assertNull(result);
+            verify(orderRepository).existsById(ORDER_ID);
             verify(orderRepository).deleteById(ORDER_ID);
         }
         

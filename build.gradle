@@ -52,8 +52,8 @@ dependencies {
 	
 	runtimeOnly 'org.postgresql:postgresql'
 	
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-	implementation 'org.springdoc:springdoc-openapi-starter-common:2.3.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
+	implementation 'org.springdoc:springdoc-openapi-starter-common:2.8.6'
 	implementation 'org.apache.groovy:groovy-json:4.0.25'
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
