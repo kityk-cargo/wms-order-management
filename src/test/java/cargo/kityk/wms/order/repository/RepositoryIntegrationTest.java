@@ -338,7 +338,7 @@ public class RepositoryIntegrationTest extends BaseRepositoryTest {
             // Assert
             assertFalse(results.isEmpty());
             assertEquals(1, results.size());
-            //assertEquals(QUANTITY, results.get(0).getQuantity());
+            assertEquals(2, results.get(0).getQuantity());
             assertEquals(PRODUCT_ID, results.get(0).getProductId());
             assertEquals(ITEM_PRICE, results.get(0).getPrice());
         }
