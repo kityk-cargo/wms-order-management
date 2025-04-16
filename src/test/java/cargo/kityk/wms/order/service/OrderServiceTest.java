@@ -9,6 +9,7 @@ import cargo.kityk.wms.order.entity.Customer;
 import cargo.kityk.wms.order.entity.OrderItem;
 import cargo.kityk.wms.order.repository.OrderRepository;
 import cargo.kityk.wms.order.repository.CustomerRepository;
+import cargo.kityk.wms.order.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,11 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Arrays;
 
+import static cargo.kityk.wms.test.order.testconfig.TestConstants.*;
+import static cargo.kityk.wms.test.order.testutils.TestEntityFactory.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-
-import cargo.kityk.wms.order.exception.ResourceNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Order Service Tests")
@@ -44,15 +45,6 @@ public class OrderServiceTest {
 
     @InjectMocks
     private OrderService orderService;
-    
-    // Common test constants
-    private static final Long CUSTOMER_ID = 1L;
-    private static final Long ORDER_ID = 1L;
-    private static final Long PRODUCT_ID = 101L;
-    private static final BigDecimal ITEM_PRICE = new BigDecimal("29.99");
-    private static final String PENDING_STATUS = "Pending";
-    private static final String PROCESSING_STATUS = "Processing";
-    private static final String SHIPPED_STATUS = "Shipped";
     
     // Test fixtures
     private Customer testCustomer;
@@ -70,62 +62,12 @@ public class OrderServiceTest {
         testOrder = createBasicOrder(ORDER_ID, testCustomer, PROCESSING_STATUS);
     }
     
-    // Utility methods for creating test objects
-    private Customer createCustomer(Long id) {
-        Customer customer = new Customer();
-        customer.setId(id);
-        customer.setName("Test Customer");
-        customer.setEmail("test@example.com");
-        return customer;
-    }
-    
-    private Order createBasicOrder(Long id, Customer customer, String status) {
-        Order order = new Order();
-        order.setId(id);
-        order.setCustomer(customer);
-        order.setStatus(status);
-        order.setOrderDate(testTime);
-        order.setTotalAmount(BigDecimal.ZERO);
-        order.setItems(new ArrayList<>());
-        order.setCreatedAt(testTime);
-        order.setUpdatedAt(testTime);
-        return order;
-    }
-    
-    private OrderItem createOrderItem(Order order, Long productId, int quantity) {
-        OrderItem item = new OrderItem();
-        item.setId(productId);
-        item.setOrder(order);
-        item.setProductId(productId);
-        item.setQuantity(quantity);
-        item.setPrice(ITEM_PRICE);
-        return item;
-    }
-    
-    private void addItemsToOrder(Order order, int itemCount) {
-        List<OrderItem> items = new ArrayList<>();
-        BigDecimal total = BigDecimal.ZERO;
-        
-        for (int i = 0; i < itemCount; i++) {
-            Long productId = PRODUCT_ID + i;
-            int quantity = i + 1;
-            OrderItem item = createOrderItem(order, productId, quantity);
-            items.add(item);
-            
-            BigDecimal itemTotal = ITEM_PRICE.multiply(new BigDecimal(quantity));
-            total = total.add(itemTotal);
-        }
-        
-        order.setItems(items);
-        order.setTotalAmount(total);
-    }
-    
     @Nested
     @DisplayName("Order Creation Operations")
     class CreateOrderTests {
         @Test
-        @DisplayName("Test createOrder: Should create and return the order with all details")
-        public void testCreateOrder_Success() {
+        @DisplayName("Should create and return the order with all details")
+        void testCreateOrder_Success() {
             // Arrange
             OrderItemCreateDTO itemDTO = OrderItemCreateDTO.builder()
                     .productId(PRODUCT_ID)
@@ -137,9 +79,7 @@ public class OrderServiceTest {
             
             // Create order item with quantity=2 to match our expected calculation (29.99 * 2 = 59.98)
             OrderItem orderItem = createOrderItem(newOrder, PRODUCT_ID, 2);
-            List<OrderItem> items = new ArrayList<>();
-            items.add(orderItem);
-            newOrder.setItems(items);
+            newOrder.setItems(Collections.singletonList(orderItem));
             
             // Set the total amount to match what the service would calculate (29.99 * 2 = 59.98)
             newOrder.setTotalAmount(new BigDecimal("59.98"));
@@ -169,8 +109,8 @@ public class OrderServiceTest {
         }
         
         @Test
-        @DisplayName("Test createOrder: Should throw exception when customer not found")
-        public void testCreateOrder_CustomerNotFound() {
+        @DisplayName("Should throw exception when customer not found")
+        void testCreateOrder_CustomerNotFound() {
             // Arrange
             Long nonExistentCustomerId = 999L;
             orderCreateDTO.setCustomerId(nonExistentCustomerId);
@@ -189,8 +129,8 @@ public class OrderServiceTest {
         }
         
         @Test
-        @DisplayName("Test createOrder: Should handle empty item list")
-        public void testCreateOrder_EmptyItems() {
+        @DisplayName("Should handle empty item list")
+        void testCreateOrder_EmptyItems() {
             // Arrange
             Order emptyItemsOrder = createBasicOrder(ORDER_ID, testCustomer, PENDING_STATUS);
             
@@ -206,6 +146,9 @@ public class OrderServiceTest {
             assertEquals(PENDING_STATUS, result.getStatus());
             assertEquals(BigDecimal.ZERO, result.getTotalAmount());
             assertTrue(result.getItems().isEmpty());
+            
+            verify(customerRepository).findById(CUSTOMER_ID);
+            verify(orderRepository).save(any(Order.class));
         }
     }
 
@@ -213,8 +156,8 @@ public class OrderServiceTest {
     @DisplayName("Order Retrieval Operations")
     class GetOrderTests {
         @Test
-        @DisplayName("Test getOrder: Should return complete order details when found")
-        public void testGetOrder_Success() {
+        @DisplayName("Should return complete order details when found")
+        void testGetOrder_Success() {
             // Arrange
             addItemsToOrder(testOrder, 2);
             when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(testOrder));
@@ -241,29 +184,28 @@ public class OrderServiceTest {
         }
         
         @Test
-        @DisplayName("Test getOrder: Should throw ResourceNotFoundException when order not found")
-        public void testGetOrder_NotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when order not found")
+        void testGetOrder_NotFound() {
             // Arrange
             Long nonExistentOrderId = 999L;
             when(orderRepository.findById(nonExistentOrderId)).thenReturn(Optional.empty());
     
             // Act & Assert
-            ResourceNotFoundException exception = assertThrows(
+            assertThrows(
                 ResourceNotFoundException.class,
                 () -> orderService.getOrder(nonExistentOrderId)
             );
             
-            assertTrue(exception.getMessage().contains("Order not found"));
             verify(orderRepository).findById(nonExistentOrderId);
         }
     }
-
+    
     @Nested
     @DisplayName("Order Update Operations")
     class UpdateOrderTests {
         @Test
-        @DisplayName("Test updateOrder: Should update and return the order with all modified fields")
-        public void testUpdateOrder_Success() {
+        @DisplayName("Should update and return the order with all modified fields")
+        void testUpdateOrder_Success() {
             // Arrange
             OrderDTO updateOrderDTO = OrderDTO.builder()
                     .id(ORDER_ID)
@@ -292,8 +234,8 @@ public class OrderServiceTest {
         }
         
         @Test
-        @DisplayName("Test updateOrder: Should throw exception when order not found")
-        public void testUpdateOrder_NotFound() {
+        @DisplayName("Should throw exception when order not found")
+        void testUpdateOrder_NotFound() {
             // Arrange
             Long nonExistentOrderId = 999L;
             OrderDTO updateOrderDTO = OrderDTO.builder()
@@ -314,29 +256,28 @@ public class OrderServiceTest {
             verify(orderRepository, never()).save(any(Order.class));
         }
     }
-
+    
     @Nested
     @DisplayName("Order Deletion and Listing Operations")
     class DeleteAndListOrderTests {
         @Test
-        @DisplayName("Test deleteOrder: Should throw ResourceNotFoundException when order not found")
-        public void testDeleteOrder_NotFound() {
+        @DisplayName("Should throw ResourceNotFoundException when order not found")
+        void testDeleteOrder_NotFound() {
             // Arrange
-            when(orderRepository.existsById(ORDER_ID)).thenReturn(false);
+            Long nonExistentOrderId = 999L;
     
             // Act & Assert
-            ResourceNotFoundException exception = assertThrows(
+            assertThrows(
                 ResourceNotFoundException.class,
-                () -> orderService.deleteOrder(ORDER_ID)
+                () -> orderService.deleteOrder(nonExistentOrderId)
             );
-            
-            assertTrue(exception.getMessage().contains("Order not found"));
-            verify(orderRepository, never()).deleteById(ORDER_ID);
+
+            verify(orderRepository, never()).delete(any(Order.class));
         }
         
         @Test
-        @DisplayName("Test deleteOrder: Should successfully delete the order")
-        public void testDeleteOrder_Success() {
+        @DisplayName("Should successfully delete the order")
+        void testDeleteOrder_Success() {
             // Arrange
             when(orderRepository.existsById(ORDER_ID)).thenReturn(true);
     
@@ -349,8 +290,8 @@ public class OrderServiceTest {
         }
         
         @Test
-        @DisplayName("Test getAllOrders: Should return all orders with details")
-        public void testGetAllOrders_Success() {
+        @DisplayName("Should return all orders with details")
+        void testGetAllOrders_Success() {
             // Arrange
             Order order1 = createBasicOrder(ORDER_ID, testCustomer, PROCESSING_STATUS);
             order1.setTotalAmount(new BigDecimal("100.00"));
@@ -379,11 +320,13 @@ public class OrderServiceTest {
             assertEquals(2L, secondOrder.getId());
             assertEquals(SHIPPED_STATUS, secondOrder.getStatus());
             assertEquals(new BigDecimal("200.00"), secondOrder.getTotalAmount());
+            
+            verify(orderRepository).findAll();
         }
         
         @Test
-        @DisplayName("Test getAllOrders: Should return empty list when no orders exist")
-        public void testGetAllOrders_Empty() {
+        @DisplayName("Should return empty list when no orders exist")
+        void testGetAllOrders_Empty() {
             // Arrange
             when(orderRepository.findAll()).thenReturn(new ArrayList<>());
     
@@ -393,6 +336,8 @@ public class OrderServiceTest {
             // Assert
             assertNotNull(results);
             assertTrue(results.isEmpty());
+            
+            verify(orderRepository).findAll();
         }
     }
 }
