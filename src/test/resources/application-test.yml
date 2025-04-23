@@ -1,0 +1,20 @@
+# Inventory service settings for tests
+inventory:
+  service:
+    url: http://localhost:8081
+
+# Configure detailed logging for Pact tests
+logging:
+  level:
+    cargo.kityk.wms.order.service.client.InventoryClient: DEBUG
+    au.com.dius.pact: DEBUG
+    root: INFO
+
+# Pact consumer test settings
+pact:
+  consumer:
+    name: wms-order-management
+  provider:
+    name: wms-inventory-management
+    host: localhost
+    port: 8081 

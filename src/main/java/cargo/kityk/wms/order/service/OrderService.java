@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,11 +28,15 @@ public class OrderService {
     private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
+    private final ProductValidationService productValidationService;
     
     @Autowired
-    public OrderService(OrderRepository orderRepository, CustomerRepository customerRepository) {
+    public OrderService(OrderRepository orderRepository, 
+                       CustomerRepository customerRepository,
+                       ProductValidationService productValidationService) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
+        this.productValidationService = productValidationService;
     }
     
     /**
@@ -59,6 +62,14 @@ public class OrderService {
             
         // Add order items
         if (orderCreateDTO.getItems() != null && !orderCreateDTO.getItems().isEmpty()) {
+            // Extract product IDs for validation
+            List<Long> productIds = orderCreateDTO.getItems().stream()
+                .map(OrderItemCreateDTO::getProductId)
+                .collect(Collectors.toList());
+                
+            // Validate all products exist in inventory
+            productValidationService.validateProductsExist(productIds);
+            
             BigDecimal totalAmount = BigDecimal.ZERO;
             
             for (OrderItemCreateDTO itemDTO : orderCreateDTO.getItems()) {
@@ -122,7 +133,17 @@ public class OrderService {
             // In a real app, we would update shipping details
         }
         
-        // In a real application, you would handle updating items, handling payments, etc.
+        // Validate products if items are being updated
+        if (orderDTO.getItems() != null && !orderDTO.getItems().isEmpty()) {
+            List<Long> productIds = orderDTO.getItems().stream()
+                .map(OrderItemDTO::getProductId)
+                .collect(Collectors.toList());
+                
+            // Validate all products exist in inventory
+            productValidationService.validateProductsExist(productIds);
+            
+            // In a real application, you would handle updating items, handling payments, etc.
+        }
         
         // Save updated order
         Order updatedOrder = orderRepository.save(existingOrder);
