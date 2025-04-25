@@ -2,6 +2,7 @@ package cargo.kityk.wms.order.service.client;
 
 import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.PactBuilder;
+import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.V4Pact;
@@ -37,6 +38,16 @@ public class InventoryServicePactTest {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
 
+        // Create the response body with matchers
+        PactDslJsonBody responseBody = new PactDslJsonBody()
+                .numberType("id", EXISTING_PRODUCT_ID)
+                .stringType("sku", "EL-9999-01X")
+                .stringType("name", "Super LED Panel 60W")
+                .stringType("category", "Lighting Equipment")
+                .stringType("description", "A high-end LED panel for industrial use")
+                .stringMatcher("created_at", "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z", "2023-05-05T09:00:00Z")
+                .stringMatcher("updated_at", "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z", "2023-05-06T10:00:00Z");
+
         return builder
                 .usingLegacyDsl()
                 .given("a product with ID " + EXISTING_PRODUCT_ID + " exists")
@@ -46,22 +57,16 @@ public class InventoryServicePactTest {
                 .willRespondWith()
                 .status(200)
                 .headers(headers)
-                .body("""
-                {
-                    "id": 42,
-                    "sku": "EL-9999-01X",
-                    "name": "Super LED Panel 60W",
-                    "category": "Lighting Equipment",
-                    "description": "A high-end LED panel for industrial use",
-                    "created_at": "2023-05-05T09:00:00Z",
-                    "updated_at": "2023-05-06T10:00:00Z"
-                }
-            """)
+                .body(responseBody)
                 .toPact(V4Pact.class);
     }
 
     @Pact(consumer = "wms_order_management")
     public V4Pact nonexistentProductPact(PactBuilder builder) {
+        // Create the error response body with matchers
+        PactDslJsonBody errorResponseBody = new PactDslJsonBody()
+                .stringType("detail", "Product not found");
+
         return builder
                 .usingLegacyDsl()
                 .given("a product with ID " + NONEXISTENT_PRODUCT_ID + " does not exist")
@@ -70,11 +75,7 @@ public class InventoryServicePactTest {
                 .method("GET")
                 .willRespondWith()
                 .status(404)
-                .body("""
-                {
-                    "detail": "Product not found"
-                }
-            """)
+                .body(errorResponseBody)
                 .toPact(V4Pact.class);
     }
 

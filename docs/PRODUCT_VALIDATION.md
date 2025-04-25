@@ -32,6 +32,16 @@ The `InventoryServicePactTest` defines the contract that Order Management (consu
 1. **Existing Product Test**: Verifies we can retrieve details of an existing product
 2. **Non-existent Product Test**: Verifies we receive a 404 error for non-existent products
 
+### Pact Matchers
+
+The consumer tests use Pact matchers to make the contracts more flexible:
+
+1. **Type Matchers**: Ensure fields have the right data type (e.g., `numberType`, `stringType`)
+2. **Regex Matchers**: Validate string formats like timestamps using regular expressions
+3. **Example Values**: Each matcher includes example values for clear documentation
+
+Using matchers creates more resilient contracts that won't break when non-critical details change, such as the exact text of an error message or the specific timestamp format.
+
 ### Pact Contract Generation
 
 Running the Pact consumer tests generates contract files in the `pacts` directory, which:
