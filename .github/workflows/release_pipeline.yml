@@ -79,11 +79,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       # Add steps to generate and publish Pact files
-      - name: Run Pact consumer tests
-        run: ./gradlew test --tests cargo.kityk.wms.order.service.client.InventoryServicePactTest
-        
-      - name: Transform Pact files
-        run: ./gradlew transformPacts
+      - name: Run Pact tests
+        run: ./gradlew pactVerify
           
       - name: Checkout wms-contracts repo
         uses: actions/checkout@v3
