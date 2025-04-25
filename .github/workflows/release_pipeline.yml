@@ -77,16 +77,21 @@ jobs:
             openapi.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-      # Add steps to generate and publish Pact files
-      - name: Run Pact tests
-        run: ./gradlew pactVerify
-          
+
       - name: Checkout wms-contracts repo
         uses: actions/checkout@v3
         with:
           repository: kityk-cargo/wms-contracts
           path: ./wms-contracts
+
+      # Add steps to generate and publish Pact files
+      - name: Run Pact tests
+        run: ./gradlew pactVerify
+        env:
+          PACTFOLDER_PATH: ./wms-contracts/pact/rest/wms_order_management
+          SPRING_PROFILES_ACTIVE: test,dbIntegrationTest
+          LIQUIBASE_TEST_CLASSPATH: wms-main/liquibase
+          TESTCONTAINERS_RYUK_DISABLED: "true"
           
       - name: Verify push token exists
         shell: bash
