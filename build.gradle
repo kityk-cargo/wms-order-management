@@ -166,7 +166,7 @@ task pactVerify(type: Test) {
         
     // Pact configuration
     systemProperty 'pact.provider.version', project.version
-    systemProperty 'pact.verifier.publishResults', 'false'
+    systemProperty 'pact.verifier.publishResults', 'true'
     systemProperty 'pact.folder.path', pactFolderPath
     
     // Spring profiles
@@ -195,4 +195,56 @@ task pactVerify(type: Test) {
     
     // Add wms-main/liquibase to the classpath
     classpath += files(liquibaseTestPath)
+    
+    // Make transformPacts task depend on this task
+    finalizedBy 'transformPacts'
+}
+
+// Task to transform Pact files to the structure used by other services
+task transformPacts {
+    description = 'Transforms Pact files from consumer-provider.json to provider/consumer.json structure'
+    group = 'verification'
+
+    doLast {
+        // Source directory with generated Pact files
+        def pactsDir = file("$buildDir/pacts")
+        
+        // Target directory for restructured Pact files (similar to the transient branch structure)
+        def targetDir = file("$buildDir/pacts-restructured")
+        targetDir.mkdirs()
+        
+        if (pactsDir.exists()) {
+            pactsDir.eachFile { pactFile ->
+                if (pactFile.name.endsWith('.json')) {
+                    logger.lifecycle("Processing Pact file: ${pactFile.name}")
+                    
+                    // Extract consumer and provider from the filename pattern: consumer-provider.json
+                    def filename = pactFile.name
+                    def parts = filename.replace('.json', '').split('-')
+                    
+                    if (parts.length >= 2) {
+                        def consumerName = parts[0]
+                        def providerName = parts[1]
+                        
+                        // Create the provider directory
+                        def providerDir = new File(targetDir, "pacts/${providerName}")
+                        providerDir.mkdirs()
+                        
+                        // Copy the file with just the consumer name
+                        def targetFile = new File(providerDir, "${consumerName}.json")
+                        targetFile.text = pactFile.text
+                        
+                        logger.lifecycle("Transformed Pact: ${filename} -> pacts/${providerName}/${consumerName}.json")
+                    } else {
+                        logger.warn("Unexpected Pact filename format: ${filename}, expected consumer-provider.json")
+                    }
+                }
+            }
+            
+            logger.lifecycle("Pact files restructured in: $targetDir")
+            logger.lifecycle("These files can be copied to the pacts-transient-do_not_touch branch for publishing")
+        } else {
+            logger.warn("No Pact files found in $pactsDir")
+        }
+    }
 }

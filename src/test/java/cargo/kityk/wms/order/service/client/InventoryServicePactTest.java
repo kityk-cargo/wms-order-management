@@ -25,14 +25,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * expects from the Inventory Management service (provider).
  */
 @ExtendWith(PactConsumerTestExt.class)
-@PactTestFor(providerName = "wms-inventory-management")
+@PactTestFor(providerName = "wms_inventory_management")
 @Tag("pact")
 public class InventoryServicePactTest {
 
     private static final Long EXISTING_PRODUCT_ID = 42L;
     private static final Long NONEXISTENT_PRODUCT_ID = 999L;
 
-    @Pact(consumer = "wms-order-management")
+    @Pact(consumer = "wms_order_management")
     public V4Pact existingProductPact(PactBuilder builder) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Content-Type", "application/json");
@@ -60,7 +60,7 @@ public class InventoryServicePactTest {
                 .toPact(V4Pact.class);
     }
 
-    @Pact(consumer = "wms-order-management")
+    @Pact(consumer = "wms_order_management")
     public V4Pact nonexistentProductPact(PactBuilder builder) {
         return builder
                 .usingLegacyDsl()

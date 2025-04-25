@@ -77,3 +77,45 @@ jobs:
             openapi.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      # Add steps to generate and publish Pact files
+      - name: Run Pact consumer tests
+        run: ./gradlew test --tests cargo.kityk.wms.order.service.client.InventoryServicePactTest
+        
+      - name: Transform Pact files
+        run: ./gradlew transformPacts
+          
+      - name: Checkout wms-contracts repo
+        uses: actions/checkout@v3
+        with:
+          repository: kityk-cargo/wms-contracts
+          path: ./wms-contracts
+          
+      - name: Verify push token exists
+        shell: bash
+        env:
+          CONTRACTS_PUSH_TOKEN: ${{ secrets.CONTRACTS_PUSH_TOKEN }}
+        run: |
+          if [ -z "$CONTRACTS_PUSH_TOKEN" ]; then
+            echo "Error: CONTRACTS_PUSH_TOKEN not defined" >&2
+            exit 1
+          fi
+          echo "Verified: CONTRACTS_PUSH_TOKEN exists"
+
+      - name: Publish Pact files to contracts repo
+        env:
+          CONTRACTS_PUSH_TOKEN: ${{ secrets.CONTRACTS_PUSH_TOKEN }}
+        run: |
+          mkdir -p ./wms-contracts/pact/rest
+          cp -r ./build/pacts-restructured/pacts/* ./wms-contracts/pact/rest/
+          cd ./wms-contracts
+          git add -f .
+          if ! git diff-index --quiet HEAD --; then
+            git config --global user.email "contract@updater.com"
+            git config --global user.name "Fast Tests Angel"
+            git commit -m "Update Order Management pact files"
+            git config --unset-all http.https://github.com/.extraheader
+            git push -f https://$CONTRACTS_PUSH_TOKEN@github.com/kityk-cargo/wms-contracts.git main
+          else
+            echo "No changes to publish"
+          fi
