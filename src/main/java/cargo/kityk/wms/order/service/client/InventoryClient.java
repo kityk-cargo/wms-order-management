@@ -10,7 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
  */
 @FeignClient(name = "inventory-management", url = "${inventory.service.url}")
 public interface InventoryClient {
-    
+    String BASE_URL = "/api/v1/products";
+
     /**
      * Check if a product exists by ID.
      * This is used during order creation and updates to validate product existence.
@@ -18,6 +19,6 @@ public interface InventoryClient {
      * @param productId The ID of the product to check
      * @return Product details if it exists
      */
-    @GetMapping("/api/products/{productId}")
+    @GetMapping(BASE_URL + "/{productId}")
     ProductResponse getProductById(@PathVariable("productId") Long productId);
-} 
+}
