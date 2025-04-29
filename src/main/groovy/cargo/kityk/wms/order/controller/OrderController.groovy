@@ -1,7 +1,7 @@
 package cargo.kityk.wms.order.controller
 
 import cargo.kityk.wms.order.dto.*
-import cargo.kityk.wms.order.exception.ServiceErrorResponse
+import cargo.kityk.wms.order.exception.CommonErrorFormat
 import cargo.kityk.wms.order.service.OrderService
 import groovy.transform.CompileStatic
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,12 +49,12 @@ class OrderController {
             @ApiResponse(
                 responseCode = "400", 
                 description = "Invalid order data",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             ),
             @ApiResponse(
                 responseCode = "404", 
                 description = "Product not found",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             )
         ]
     )
@@ -78,7 +78,7 @@ class OrderController {
             @ApiResponse(
                 responseCode = "500", 
                 description = "Internal server error",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             )
         ]
     )
@@ -100,7 +100,7 @@ class OrderController {
             @ApiResponse(
                 responseCode = "404", 
                 description = "Order not found",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             )
         ]
     )
@@ -125,12 +125,12 @@ class OrderController {
             @ApiResponse(
                 responseCode = "400", 
                 description = "Invalid order data",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             ),
             @ApiResponse(
                 responseCode = "404", 
                 description = "Order not found",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             )
         ]
     )
@@ -152,7 +152,7 @@ class OrderController {
             @ApiResponse(
                 responseCode = "404", 
                 description = "Order not found",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             )
         ]
     )
@@ -177,12 +177,12 @@ class OrderController {
             @ApiResponse(
                 responseCode = "404", 
                 description = "Order not found",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             ),
             @ApiResponse(
                 responseCode = "400", 
                 description = "Insufficient inventory",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             )
         ]
     )
@@ -213,12 +213,12 @@ class OrderController {
             @ApiResponse(
                 responseCode = "400", 
                 description = "Invalid status",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             ),
             @ApiResponse(
                 responseCode = "404", 
                 description = "Order not found",
-                content = @Content(schema = @Schema(implementation = ServiceErrorResponse.class))
+                content = @Content(schema = @Schema(implementation = CommonErrorFormat.class))
             )
         ]
     )
