@@ -1,6 +1,7 @@
 package cargo.kityk.wms.order.service;
 
 import cargo.kityk.wms.order.exception.InvalidOrderException;
+import cargo.kityk.wms.order.exception.OrderManagementException;
 import cargo.kityk.wms.order.service.client.InventoryClient;
 import cargo.kityk.wms.order.service.client.ProductResponse;
 import feign.FeignException;
@@ -95,7 +96,7 @@ class ProductValidationServiceTest {
     }
     
     @Test
-    @DisplayName("validateProductsExist should not throw when list is null")
+    @DisplayName("validateProductsExist should not throw when product list is null")
     void validateProductsExist_WhenListIsNull_ShouldNotThrow() {
         // Act & Assert
         assertDoesNotThrow(() -> productValidationService.validateProductsExist(null));
@@ -115,7 +116,7 @@ class ProductValidationServiceTest {
             .thenThrow(new RuntimeException("Service unavailable"));
         
         // Act & Assert
-        assertDoesNotThrow(() -> productValidationService.validateProductsExist(productIds));
+        assertThrows(OrderManagementException.class, () -> productValidationService.validateProductsExist(productIds));
         
         // Verify attempt was made
         verify(inventoryClient).getProductById(productId);
