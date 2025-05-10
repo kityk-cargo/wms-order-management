@@ -24,20 +24,44 @@ public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
     
     /**
-     * Handle resource not found exceptions
+     * Handle all OrderManagementException types
+     * This provides a single entry point for all domain-specific exceptions
      */
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<CommonErrorFormat> handleResourceNotFoundException(
-            ResourceNotFoundException ex, WebRequest request) {
+    @ExceptionHandler(OrderManagementException.class)
+    public ResponseEntity<CommonErrorFormat> handleOrderManagementException(
+            OrderManagementException ex, WebRequest request) {
         
-        logger.warn("Resource not found: {}", ex.getMessage());
+        // Log different levels based on HTTP status
+        if (ex.getStatus().is5xxServerError()) {
+            logger.error("Order management error: {}", ex.getMessage(), ex);
+        } else {
+            logger.warn("Order management error: {}", ex.getMessage());
+        }
         
-        String detail = String.format("%s not found with ID: %s", 
-            ex.getResourceType(), ex.getResourceId());
+        // Create error response with proper criticality
+        CommonErrorFormat errorResponse = new CommonErrorFormat(ex.getCriticality(), ex.getMessage());
         
-        CommonErrorFormat errorResponse = CommonErrorFormat.critical(detail);
+        // Add recovery suggestion if available
+        if (ex.getRecoverySuggestion() != null && !ex.getRecoverySuggestion().isEmpty()) {
+            CommonErrorFormat recoverySuggestion = CommonErrorFormat.nonCritical(
+                    "Recovery suggestion: " + ex.getRecoverySuggestion());
+            errorResponse.addOtherError(recoverySuggestion);
+        }
         
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+        // Add specific handling for resource not found exception
+        if (ex instanceof ResourceNotFoundException) {
+            ResourceNotFoundException rnfEx = (ResourceNotFoundException) ex;
+            String detail = String.format("%s not found with ID: %s", 
+                rnfEx.getResourceType(), rnfEx.getResourceId());
+            
+            // Optional: Add more detailed information to error response
+            if (errorResponse.getOtherErrors() == null) {
+                CommonErrorFormat resourceDetail = CommonErrorFormat.nonCritical(detail);
+                errorResponse.addOtherError(resourceDetail);
+            }
+        }
+        
+        return new ResponseEntity<>(errorResponse, ex.getStatus());
     }
     
     /**
@@ -64,6 +88,11 @@ public class GlobalExceptionHandler {
         // Create the main error response
         CommonErrorFormat errorResponse = CommonErrorFormat.critical(mainErrorDetail);
         
+        // Add recovery suggestion
+        CommonErrorFormat recoverySuggestion = CommonErrorFormat.nonCritical(
+                "Recovery suggestion: Please check your input and correct the validation errors");
+        errorResponse.addOtherError(recoverySuggestion);
+        
         // If there are multiple errors, add them as other errors
         if (fieldErrors.size() > 1) {
             // Create individual CommonErrorFormat objects for each validation error
@@ -83,20 +112,6 @@ public class GlobalExceptionHandler {
     }
     
     /**
-     * Handle invalid order exceptions
-     */
-    @ExceptionHandler(InvalidOrderException.class)
-    public ResponseEntity<CommonErrorFormat> handleInvalidOrderException(
-            InvalidOrderException ex, WebRequest request) {
-        
-        logger.warn("Invalid order: {}", ex.getMessage());
-        
-        CommonErrorFormat errorResponse = CommonErrorFormat.critical(ex.getMessage());
-        
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-    
-    /**
      * Handle database integrity violations
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
@@ -108,6 +123,11 @@ public class GlobalExceptionHandler {
         CommonErrorFormat errorResponse = CommonErrorFormat.critical(
             "A data integrity constraint was violated"
         );
+        
+        // Add recovery suggestion
+        CommonErrorFormat recoverySuggestion = CommonErrorFormat.nonCritical(
+                "Recovery suggestion: Check that your data doesn't violate any unique constraints");
+        errorResponse.addOtherError(recoverySuggestion);
         
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
@@ -122,6 +142,11 @@ public class GlobalExceptionHandler {
         logger.error("Unhandled exception: ", ex);
         
         CommonErrorFormat errorResponse = CommonErrorFormat.critical("Internal server error");
+        
+        // Add recovery suggestion
+        CommonErrorFormat recoverySuggestion = CommonErrorFormat.nonCritical(
+                "Recovery suggestion: Please contact support if the problem persists");
+        errorResponse.addOtherError(recoverySuggestion);
         
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }

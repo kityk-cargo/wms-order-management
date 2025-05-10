@@ -8,13 +8,14 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  * For example, when it contains products that don't exist in inventory.
  */
 @ResponseStatus(HttpStatus.BAD_REQUEST)
-public class InvalidOrderException extends RuntimeException {
+public class InvalidOrderException extends OrderManagementException {
 
+    /**
+     * Create a new invalid order exception
+     * 
+     * @param message Error message
+     */
     public InvalidOrderException(String message) {
-        super(message);
-    }
-
-    public InvalidOrderException(String message, Throwable cause) {
-        super(message, cause);
+        super(message, HttpStatus.BAD_REQUEST, "critical", "Correct the order data and try again");
     }
 } 

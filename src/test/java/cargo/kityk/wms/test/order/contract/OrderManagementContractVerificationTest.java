@@ -13,6 +13,8 @@ import cargo.kityk.wms.order.entity.Order;
 import cargo.kityk.wms.order.entity.OrderItem;
 import cargo.kityk.wms.order.repository.CustomerRepository;
 import cargo.kityk.wms.order.repository.OrderRepository;
+import cargo.kityk.wms.order.service.client.InventoryClient;
+import cargo.kityk.wms.order.service.client.ProductResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.TestTemplate;
@@ -22,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -75,6 +78,9 @@ public class OrderManagementContractVerificationTest {
     
     @Autowired
     private CustomerRepository customerRepository;
+    
+    @MockBean
+    private InventoryClient inventoryClient;
 
     /**
      * Set up dynamic properties for the database connection from TestContainers
@@ -117,6 +123,22 @@ public class OrderManagementContractVerificationTest {
         // Set up the test target - where the provider is running
         logger.info("Setting target to localhost:{}", port);
         context.setTarget(new HttpTestTarget("localhost", port));
+        
+        // Set up default mock for inventory client to make product validation succeed
+        setupDefaultProductResponseMock();
+    }
+
+    //todo respond with the pact-based product response -- somethinghad gpne wrong with the pact
+    private void setupDefaultProductResponseMock() {
+        // Create a default product response for any product ID
+        ProductResponse productResponse = new ProductResponse();
+        productResponse.setId(1L);
+        productResponse.setSku("TEST-SKU");
+        productResponse.setName("Test Product");
+        productResponse.setCategory("Test Category");
+        
+        // Setup mock to return this product for any ID
+        Mockito.when(inventoryClient.getProductById(Mockito.anyLong())).thenReturn(productResponse);
     }
 
     @TestTemplate
@@ -232,6 +254,15 @@ public class OrderManagementContractVerificationTest {
         logger.info("Setting up provider state: 'can create a new order'");
         // Ensure a customer exists for order creation
         ensureCustomerExists(1L);
+        
+        // Setup mock to return a valid product response for product validation
+        ProductResponse productResponse = new ProductResponse();
+        productResponse.setId(101L);
+        productResponse.setSku("TEST-101");
+        productResponse.setName("Test Product 101");
+        
+        // Mock the inventory client to return the product response
+        Mockito.when(inventoryClient.getProductById(Mockito.anyLong())).thenReturn(productResponse);
     }
     
     /**
@@ -254,12 +285,14 @@ public class OrderManagementContractVerificationTest {
     @State("product with ID 9999 does not exist")
     public void setupNonExistentProduct() {
         logger.info("Setting up provider state: 'product with ID 9999 does not exist'");
-        // This is handled by the ProductNotFoundException in the OrderService
+        // Mock the inventory client to throw a not found exception for product 9999
+        Mockito.when(inventoryClient.getProductById(9999L))
+               .thenThrow(feign.FeignException.NotFound.class);
     }
 
     @State("order validation will fail")
     public void setupFailedOrderValidation() {
         logger.info("Setting up provider state: 'order validation will fail'");
-        // This is handled by the ProductNotFoundException in the OrderService
+        // No specific setup needed as the validation failures are based on request payload
     }
 } 

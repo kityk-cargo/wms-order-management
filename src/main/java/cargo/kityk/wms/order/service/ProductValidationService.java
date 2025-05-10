@@ -1,11 +1,13 @@
 package cargo.kityk.wms.order.service;
 
 import cargo.kityk.wms.order.exception.InvalidOrderException;
+import cargo.kityk.wms.order.exception.OrderManagementException;
 import cargo.kityk.wms.order.service.client.InventoryClient;
 import feign.FeignException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -72,7 +74,9 @@ public class ProductValidationService {
             // In case of other errors (network, service down, etc.), log but don't fail validation
             // This is to prevent orders from failing when inventory service is temporarily unavailable //todo massive rework
             logger.error("Error validating product {}: {}", productId, e.getMessage());
-            return false;
+            throw new OrderManagementException("Error validating product", e,
+                HttpStatus.SERVICE_UNAVAILABLE, "critical",
+                "The inventory service is currently unavailable. Please try again later.");
         }
     }
 } 
