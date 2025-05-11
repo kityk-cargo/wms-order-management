@@ -72,7 +72,7 @@ public class ProductValidationService {
             return true; // Product does not exist
         } catch (Exception e) {
             // In case of other errors (network, service down, etc.), log but don't fail validation
-            // This is to prevent orders from failing when inventory service is temporarily unavailable //todo massive rework
+            // This is to prevent orders from failing when inventory service is temporarily unavailable
             logger.error("Error validating product {}: {}", productId, e.getMessage());
             throw new OrderManagementException("Error validating product", e,
                 HttpStatus.SERVICE_UNAVAILABLE, "critical",
