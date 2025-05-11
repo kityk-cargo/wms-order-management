@@ -103,7 +103,7 @@ public class OrderServiceTest {
             
             // Verify item mapping
             assertEquals(1, result.getItems().size());
-            OrderItemDTO resultItem = result.getItems().get(0);
+            OrderItemDTO resultItem = result.getItems().getFirst();
             assertEquals(PRODUCT_ID, resultItem.getProductId());
             assertEquals(2, resultItem.getQuantity());
             assertEquals(ITEM_PRICE, resultItem.getPrice());
@@ -133,26 +133,19 @@ public class OrderServiceTest {
         }
         
         @Test
-        @DisplayName("Should handle empty item list")
+        @DisplayName("Should throw exception when creating order with empty item list")
         void testCreateOrder_EmptyItems() {
             // Arrange
-            Order emptyItemsOrder = createBasicOrder(ORDER_ID, testCustomer, PENDING_STATUS);
-            
             when(customerRepository.findById(CUSTOMER_ID)).thenReturn(Optional.of(testCustomer));
-            when(orderRepository.save(any(Order.class))).thenReturn(emptyItemsOrder);
-    
-            // Act
-            OrderDTO result = orderService.createOrder(orderCreateDTO);
-    
-            // Assert
-            assertNotNull(result);
-            assertEquals(ORDER_ID, result.getId());
-            assertEquals(PENDING_STATUS, result.getStatus());
-            assertEquals(BigDecimal.ZERO, result.getTotalAmount());
-            assertTrue(result.getItems().isEmpty());
-            
+
+            // Act & Assert
+            cargo.kityk.wms.order.exception.InvalidOrderException exception = assertThrows(
+                cargo.kityk.wms.order.exception.InvalidOrderException.class,
+                () -> orderService.createOrder(orderCreateDTO)
+            );
+            assertEquals("Order with empty item list is not a valid order to create", exception.getMessage());
             verify(customerRepository).findById(CUSTOMER_ID);
-            verify(orderRepository).save(any(Order.class));
+            verify(orderRepository, never()).save(any(Order.class));
         }
     }
 
@@ -317,7 +310,7 @@ public class OrderServiceTest {
             assertEquals(2, results.size());
             
             // First order assertions
-            OrderDTO firstOrder = results.get(0);
+            OrderDTO firstOrder = results.getFirst();
             assertEquals(ORDER_ID, firstOrder.getId());
             assertEquals(PROCESSING_STATUS, firstOrder.getStatus());
             assertEquals(new BigDecimal("100.00"), firstOrder.getTotalAmount());

@@ -10,6 +10,7 @@ import cargo.kityk.wms.order.entity.OrderItem;
 import cargo.kityk.wms.order.exception.ResourceNotFoundException;
 import cargo.kityk.wms.order.repository.CustomerRepository;
 import cargo.kityk.wms.order.repository.OrderRepository;
+import lombok.extern.java.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,9 +24,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Log
 public class OrderService {
 
-    private static final Logger logger = LoggerFactory.getLogger(OrderService.class);
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final ProductValidationService productValidationService;
@@ -51,6 +52,13 @@ public class OrderService {
         // Validate customer exists
         Customer customer = customerRepository.findById(orderCreateDTO.getCustomerId())
             .orElseThrow(() -> new ResourceNotFoundException("Customer", orderCreateDTO.getCustomerId()));
+            
+        // Validate that the order contains at least one item
+        if (orderCreateDTO.getItems() == null || orderCreateDTO.getItems().isEmpty()) {
+            String errorId = java.util.UUID.randomUUID().toString();
+            log.warning("ORDER_VALIDATION_ERROR_ID=" + errorId + " message=Order with empty item list is not a valid order to create");
+            throw new cargo.kityk.wms.order.exception.InvalidOrderException("Order with empty item list is not a valid order to create");
+        }
             
         // Create new order using setters instead of builder
         Order newOrder = new Order();
@@ -130,7 +138,7 @@ public class OrderService {
         }
         
         if (orderDTO.getShippingAddress() != null) {
-            // In a real app, we would update shipping details
+            //todo shipping address? Add to DB/remove from DTO
         }
         
         // Validate products if items are being updated

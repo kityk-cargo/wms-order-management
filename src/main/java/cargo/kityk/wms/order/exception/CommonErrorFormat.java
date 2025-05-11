@@ -54,6 +54,8 @@ public class CommonErrorFormat {
         this.criticality = criticality;
         this.id = UUID.randomUUID().toString();
         this.detail = detail;
+        java.util.logging.Logger.getLogger(CommonErrorFormat.class.getName())
+            .warning("COMMON_ERROR_ID=" + this.id + " message=" + this.detail);
     }
     
     /**
