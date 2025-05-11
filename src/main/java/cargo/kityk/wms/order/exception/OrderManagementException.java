@@ -1,5 +1,6 @@
 package cargo.kityk.wms.order.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -10,12 +11,13 @@ import org.springframework.http.HttpStatus;
  * - HTTP status code handling
  * - Error criticality levels
  * - Recovery suggestion messages
+ * - Error IDs for tracing through logs
  */
+@Slf4j
 public class OrderManagementException extends RuntimeException {
     
     private final HttpStatus status;
-    private final String criticality;
-    private final String recoverySuggestion;
+    private final CommonErrorFormat errorFormat;
     
     /**
      * Create a new order management exception
@@ -28,8 +30,13 @@ public class OrderManagementException extends RuntimeException {
     public OrderManagementException(String message, HttpStatus status, String criticality, String recoverySuggestion) {
         super(message);
         this.status = status;
-        this.criticality = criticality;
-        this.recoverySuggestion = recoverySuggestion;
+        this.errorFormat = new CommonErrorFormat(criticality, message);
+        
+        if (recoverySuggestion != null && !recoverySuggestion.isEmpty()) {
+            CommonErrorFormat recovery = new CommonErrorFormat("non-critical", 
+                "Recovery suggestion: " + recoverySuggestion);
+            this.errorFormat.addOtherError(recovery);
+        }
     }
     
     /**
@@ -44,8 +51,23 @@ public class OrderManagementException extends RuntimeException {
     public OrderManagementException(String message, Throwable cause, HttpStatus status, String criticality, String recoverySuggestion) {
         super(message, cause);
         this.status = status;
-        this.criticality = criticality;
-        this.recoverySuggestion = recoverySuggestion;
+        
+        // If the cause is also an OrderManagementException, preserve its error ID
+        if (cause instanceof OrderManagementException) {
+            //todo re-form this log and monitor this as a potential issue -- must not happen ideally
+            log.error("SEVERE: INSTANCE OF THE INTERNAL EXCEPTION WAS RE-WRAPPED WHICH MUST NOT HAPPEN", cause);
+            OrderManagementException orderEx = (OrderManagementException) cause;
+            this.errorFormat = new CommonErrorFormat(criticality, message, orderEx.getErrorId());
+        } else {
+            // Create a new error format with a new ID
+            this.errorFormat = new CommonErrorFormat(criticality, message);
+        }
+        
+        if (recoverySuggestion != null && !recoverySuggestion.isEmpty()) {
+            CommonErrorFormat recovery = new CommonErrorFormat("non-critical", 
+                "Recovery suggestion: " + recoverySuggestion);
+            this.errorFormat.addOtherError(recovery);
+        }
     }
     
     /**
@@ -63,15 +85,24 @@ public class OrderManagementException extends RuntimeException {
      * @return Error criticality
      */
     public String getCriticality() {
-        return criticality;
+        return errorFormat.getCriticality();
     }
     
     /**
-     * Get recovery suggestion if available
+     * Get the error ID for tracing
      * 
-     * @return Recovery suggestion or null
+     * @return Error ID as a string
      */
-    public String getRecoverySuggestion() {
-        return recoverySuggestion;
+    public String getErrorId() {
+        return errorFormat.getId();
+    }
+    
+    /**
+     * Get the underlying error format
+     * 
+     * @return CommonErrorFormat
+     */
+    public CommonErrorFormat getErrorFormat() {
+        return errorFormat;
     }
 } 

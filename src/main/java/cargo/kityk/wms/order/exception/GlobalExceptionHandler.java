@@ -31,31 +31,35 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CommonErrorFormat> handleOrderManagementException(
             OrderManagementException ex, WebRequest request) {
         
-        // Log different levels based on HTTP status
+        // Log different levels based on HTTP status with error ID
         if (ex.getStatus().is5xxServerError()) {
-            logger.error("Order management error: {}", ex.getMessage(), ex);
+            logger.error("ORDER_ERROR_ID={} message={}", ex.getErrorId(), ex.getMessage(), ex);
         } else {
-            logger.warn("Order management error: {}", ex.getMessage());
+            logger.warn("ORDER_ERROR_ID={} message={}", ex.getErrorId(), ex.getMessage());
         }
         
-        // Create error response with proper criticality
-        CommonErrorFormat errorResponse = new CommonErrorFormat(ex.getCriticality(), ex.getMessage());
+        // Use the error format directly from the exception
+        CommonErrorFormat errorResponse = ex.getErrorFormat();
         
-        // Add recovery suggestion if available
-        if (ex.getRecoverySuggestion() != null && !ex.getRecoverySuggestion().isEmpty()) {
-            CommonErrorFormat recoverySuggestion = CommonErrorFormat.nonCritical(
-                    "Recovery suggestion: " + ex.getRecoverySuggestion());
-            errorResponse.addOtherError(recoverySuggestion);
-        }
-        
-        // Add specific handling for resource not found exception
+        // Add specific handling for resource not found exception if needed
         if (ex instanceof ResourceNotFoundException) {
             ResourceNotFoundException rnfEx = (ResourceNotFoundException) ex;
             String detail = String.format("%s not found with ID: %s", 
                 rnfEx.getResourceType(), rnfEx.getResourceId());
             
-            // Optional: Add more detailed information to error response
-            if (errorResponse.getOtherErrors() == null) {
+            // Check if we need to add more detailed information
+            boolean hasResourceDetail = false;
+            if (errorResponse.getOtherErrors() != null) {
+                for (CommonErrorFormat error : errorResponse.getOtherErrors()) {
+                    if (error.getDetail().contains(rnfEx.getResourceType()) && 
+                        error.getDetail().contains(rnfEx.getResourceId().toString())) {
+                        hasResourceDetail = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!hasResourceDetail) {
                 CommonErrorFormat resourceDetail = CommonErrorFormat.nonCritical(detail);
                 errorResponse.addOtherError(resourceDetail);
             }
@@ -71,8 +75,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CommonErrorFormat> handleValidationExceptions(
             MethodArgumentNotValidException ex, WebRequest request) {
         
-        logger.warn("Validation error: {}", ex.getMessage());
-        
         // Get all field errors
         List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
         
@@ -87,6 +89,9 @@ public class GlobalExceptionHandler {
         
         // Create the main error response
         CommonErrorFormat errorResponse = CommonErrorFormat.critical(mainErrorDetail);
+        
+        // Log with the error ID
+        logger.warn("VALIDATION_ERROR_ID={} message={}", errorResponse.getId(), mainErrorDetail);
         
         // Add recovery suggestion
         CommonErrorFormat recoverySuggestion = CommonErrorFormat.nonCritical(
@@ -118,11 +123,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CommonErrorFormat> handleDataIntegrityViolation(
             DataIntegrityViolationException ex, WebRequest request) {
         
-        logger.error("Data integrity violation: {}", ex.getMessage());
-        
         CommonErrorFormat errorResponse = CommonErrorFormat.critical(
             "A data integrity constraint was violated"
         );
+        
+        // Log with the error ID
+        logger.error("DATA_INTEGRITY_ERROR_ID={} message={}", errorResponse.getId(), ex.getMessage());
         
         // Add recovery suggestion
         CommonErrorFormat recoverySuggestion = CommonErrorFormat.nonCritical(
@@ -139,9 +145,10 @@ public class GlobalExceptionHandler {
     public ResponseEntity<CommonErrorFormat> handleGenericException(
             Exception ex, WebRequest request) {
         
-        logger.error("Unhandled exception: ", ex);
-        
         CommonErrorFormat errorResponse = CommonErrorFormat.critical("Internal server error");
+        
+        // Log with the error ID
+        logger.error("INTERNAL_ERROR_ID={} message={}", errorResponse.getId(), ex.getMessage(), ex);
         
         // Add recovery suggestion
         CommonErrorFormat recoverySuggestion = CommonErrorFormat.nonCritical(
