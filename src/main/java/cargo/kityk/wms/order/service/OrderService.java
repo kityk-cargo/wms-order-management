@@ -10,9 +10,7 @@ import cargo.kityk.wms.order.entity.OrderItem;
 import cargo.kityk.wms.order.exception.ResourceNotFoundException;
 import cargo.kityk.wms.order.repository.CustomerRepository;
 import cargo.kityk.wms.order.repository.OrderRepository;
-import lombok.extern.java.Log;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Log
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
@@ -56,7 +54,7 @@ public class OrderService {
         // Validate that the order contains at least one item
         if (orderCreateDTO.getItems() == null || orderCreateDTO.getItems().isEmpty()) {
             String errorId = java.util.UUID.randomUUID().toString();
-            log.warning("ORDER_VALIDATION_ERROR_ID=" + errorId + " message=Order with empty item list is not a valid order to create");
+            log.warn("ORDER_VALIDATION_ERROR_ID={} message=Order with empty item list is not a valid order to create,", errorId);
             throw new cargo.kityk.wms.order.exception.InvalidOrderException("Order with empty item list is not a valid order to create");
         }
             
