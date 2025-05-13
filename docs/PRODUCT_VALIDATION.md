@@ -90,7 +90,7 @@ Several test types ensure the implementation works correctly:
 To run the Pact consumer tests:
 
 ```bash
-./gradlew test --tests cargo.kityk.wms.order.service.client.InventoryServicePactTest
+./gradlew test --tests cargo.kityk.wms.test.order.contract.InventoryServicePactTest
 ```
 
 This will generate the Pact contract files in `build/pacts` directory.
