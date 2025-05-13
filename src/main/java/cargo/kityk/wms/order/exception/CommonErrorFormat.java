@@ -3,7 +3,7 @@ package cargo.kityk.wms.order.exception;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -21,6 +21,7 @@ import java.util.UUID;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "Standard error response format")
+@Slf4j
 @Getter
 public class CommonErrorFormat {
 
@@ -54,8 +55,21 @@ public class CommonErrorFormat {
         this.criticality = criticality;
         this.id = UUID.randomUUID().toString();
         this.detail = detail;
-        java.util.logging.Logger.getLogger(CommonErrorFormat.class.getName())
-            .warning("COMMON_ERROR_ID=" + this.id + " message=" + this.detail);
+        log.warn("COMMON_ERROR_ID={} message={}", this.id, this.detail);
+    }
+    
+    /**
+     * Create a new error format with an existing ID
+     * This constructor should only be used when preserving an error ID from another error
+     * 
+     * @param criticality Error criticality level
+     * @param detail Error detail message
+     * @param existingId The existing error ID to preserve
+     */
+    public CommonErrorFormat(String criticality, String detail, String existingId) {
+        this.criticality = criticality;
+        this.id = existingId;
+        this.detail = detail;
     }
     
     /**
