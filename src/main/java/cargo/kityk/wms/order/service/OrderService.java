@@ -80,7 +80,7 @@ public class OrderService {
             BigDecimal totalAmount = BigDecimal.ZERO;
             
             for (OrderItemCreateDTO itemDTO : orderCreateDTO.getItems()) {
-                // todo: here I have the price, but it is not in the product on oder creation. Just doing it to spice up the UI/should be done on
+                // todo: here I have the price, but it is not in the product on order creation. Just doing it to spice up the UI/should be done on
                 // todo: the later stages, tbd -- probably on packing/sending to port as part of order finalization using current prices.
                 BigDecimal itemPrice = BigDecimal.valueOf(1 + Math.random() * 999).setScale(2, RoundingMode.HALF_UP);
                 BigDecimal itemTotal = itemPrice.multiply(new BigDecimal(itemDTO.getQuantity()));
