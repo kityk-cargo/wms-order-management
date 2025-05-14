@@ -23,7 +23,7 @@ class CommonErrorFormatTest {
         assertEquals("critical", error.getCriticality());
         assertEquals(errorDetail, error.getDetail());
         assertNotNull(error.getId());
-        assertTrue(error.getId().length() > 0);
+        assertFalse(error.getId().isEmpty());
     }
     
     @Test
@@ -83,7 +83,7 @@ class CommonErrorFormatTest {
         // Assert
         assertNotNull(mainError.getOtherErrors());
         assertEquals(1, mainError.getOtherErrors().size());
-        assertEquals(otherError.getDetail(), mainError.getOtherErrors().get(0).getDetail());
+        assertEquals(otherError.getDetail(), mainError.getOtherErrors().getFirst().getDetail());
     }
     
     @Test
@@ -118,7 +118,7 @@ class CommonErrorFormatTest {
         assertNull(mainError.getOtherErrors());
         
         // Act again with empty list
-        mainError.addOtherErrors(Arrays.asList());
+        mainError.addOtherErrors(List.of());
         
         // Assert again
         assertNull(mainError.getOtherErrors());

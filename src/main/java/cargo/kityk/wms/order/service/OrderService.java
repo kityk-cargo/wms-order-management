@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -79,8 +80,9 @@ public class OrderService {
             BigDecimal totalAmount = BigDecimal.ZERO;
             
             for (OrderItemCreateDTO itemDTO : orderCreateDTO.getItems()) {
-                // In a real app, we would get the product price from a product service
-                BigDecimal itemPrice = new BigDecimal("29.99"); // Simulated price
+                // todo: here I have the price, but it is not in the product on order creation. Just doing it to spice up the UI/should be done on
+                // todo: the later stages, tbd -- probably on packing/sending to port as part of order finalization using current prices.
+                BigDecimal itemPrice = BigDecimal.valueOf(1 + Math.random() * 999).setScale(2, RoundingMode.HALF_UP);
                 BigDecimal itemTotal = itemPrice.multiply(new BigDecimal(itemDTO.getQuantity()));
                 
                 // Build order item using setters
@@ -148,7 +150,7 @@ public class OrderService {
             // Validate all products exist in inventory
             productValidationService.validateProductsExist(productIds);
             
-            // In a real application, you would handle updating items, handling payments, etc.
+            // todo update order items/should be addressed when the update flow is there  -- will be done with update flow
         }
         
         // Save updated order

@@ -106,7 +106,7 @@ class ProductValidationServiceTest {
     }
     
     @Test
-    @DisplayName("validateProductsExist should not throw when service is down")
+    @DisplayName("validateProductsExist should throw OrderManagementException when service is down")
     void validateProductsExist_WhenServiceIsDown_ShouldNotThrow() {
         // Arrange
         Long productId = 1L;
