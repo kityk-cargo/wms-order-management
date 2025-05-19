@@ -128,7 +128,13 @@ public class OrderManagementContractVerificationTest {
         setupDefaultProductResponseMock();
     }
 
-    //todo respond with the pact-based product response -- somethinghad gpne wrong with the pact
+    /**
+     * Sets up a default product response for the inventory client.
+     * This is used to ensure that product validation succeeds during contract tests.
+     *
+     * This might seem not ideal since it doesn't run against the pact of the actual inventory service. However
+     * JAVA pact makes it difficult to run both against pact mock and run as a provider test.
+     */
     private void setupDefaultProductResponseMock() {
         // Create a default product response for any product ID
         ProductResponse productResponse = new ProductResponse();

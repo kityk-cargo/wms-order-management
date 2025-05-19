@@ -54,8 +54,8 @@ public class OrderManagementException extends RuntimeException {
         
         // If the cause is also an OrderManagementException, preserve its error ID
         if (cause instanceof OrderManagementException) {
-            //todo re-form this log and monitor this as a potential issue -- must not happen ideally
-            log.error("SEVERE: INSTANCE OF THE INTERNAL EXCEPTION WAS RE-WRAPPED WHICH MUST NOT HAPPEN", cause);
+            //todo re-form this log and monitor this as a potential issue -- must not happen ideally -- to be checked/removed on ELK implementation
+            log.error("SEVERE: ERROR: INSTANCE OF THE INTERNAL EXCEPTION WAS RE-WRAPPED WHICH MUST NOT HAPPEN", cause);
             OrderManagementException orderEx = (OrderManagementException) cause;
             this.errorFormat = new CommonErrorFormat(criticality, message, orderEx.getErrorId());
         } else {
