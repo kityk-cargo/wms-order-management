@@ -44,7 +44,6 @@ public class OrderServiceTest {
     private CustomerRepository customerRepository;
 
     @Mock
-    //todo test the negative validation?
     private ProductValidationService productValidationService;
 
     @InjectMocks

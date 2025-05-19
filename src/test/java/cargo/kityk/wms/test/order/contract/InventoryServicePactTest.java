@@ -96,7 +96,7 @@ public class InventoryServicePactTest {
                 .headers(headers)
                 .toPact();
     }
-    //todo the following tests are shit. Should integrate them more?
+    //todo the following tests are shit. Should integrate them more? -- requires a server running. Should we switch to some sort of pact server that runs in test configs?
     @Test
     @PactTestFor(pactMethod = "existingProductPact")
     @DisplayName("Should successfully retrieve an existing product from inventory")
