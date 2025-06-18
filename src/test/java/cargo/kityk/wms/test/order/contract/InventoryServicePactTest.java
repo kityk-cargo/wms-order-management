@@ -10,14 +10,19 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.PactSpecVersion;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import cargo.kityk.wms.order.service.client.InventoryClient;
 import cargo.kityk.wms.order.service.client.ProductResponse;
+import cargo.kityk.wms.test.order.testconfig.UnitTestConfiguration;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -32,14 +37,32 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * This defines the contract that the Order Management service (consumer)
  * expects from the Inventory Management service (provider).
  */
-@ExtendWith(PactConsumerTestExt.class)
-@PactTestFor(providerName = "wms_inventory_management", pactVersion = PactSpecVersion.V3)
+@ExtendWith({PactConsumerTestExt.class, SpringExtension.class})
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.NONE,
+    properties = {
+        "inventory.service.url=http://localhost:9999"  // Fixed port for Pact mock server
+    },
+    classes = {
+        cargo.kityk.wms.order.config.FeignClientConfig.class,
+        UnitTestConfiguration.class,
+        org.springframework.cloud.openfeign.FeignAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration.class,
+        org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration.class
+    }
+)
+@Import(UnitTestConfiguration.class)
+@ActiveProfiles("test")
+@PactTestFor(providerName = "wms_inventory_management", pactVersion = PactSpecVersion.V3, port = "9999")
 @Tag("pact")
 @DisplayName("Inventory Service Contract Tests")
 public class InventoryServicePactTest {
 
     private static final Long EXISTING_PRODUCT_ID = 1L;
     private static final Long NONEXISTENT_PRODUCT_ID = 9999L;
+    
+    @Autowired
+    private InventoryClient inventoryClient;
     
     @BeforeAll
     public static void setup() {
@@ -96,15 +119,14 @@ public class InventoryServicePactTest {
                 .headers(headers)
                 .toPact();
     }
-    //todo the following tests are shit. Should integrate them more? -- requires a server running. Should we switch to some sort of pact server that runs in test configs?
+    
+
+    //todo the following tests are less shit now. However is there a way to test how we actualkly USE the client? Or is it overkill?
     @Test
     @PactTestFor(pactMethod = "existingProductPact")
     @DisplayName("Should successfully retrieve an existing product from inventory")
     void testGetExistingProduct(MockServer mockServer) {
-        RestTemplate restTemplate = new RestTemplate();
-        String url = mockServer.getUrl() + BASE_URL + "/" + EXISTING_PRODUCT_ID;
-
-        ProductResponse response = restTemplate.getForObject(url, ProductResponse.class);
+        ProductResponse response = inventoryClient.getProductById(EXISTING_PRODUCT_ID);
 
         assertNotNull(response);
         assertEquals(EXISTING_PRODUCT_ID, response.getId());
@@ -118,11 +140,8 @@ public class InventoryServicePactTest {
     @PactTestFor(pactMethod = "nonexistentProductPact")
     @DisplayName("Should receive a 404 error when requesting a non-existent product")
     void testGetNonexistentProduct(MockServer mockServer) {
-        RestTemplate restTemplate = new RestTemplate();
-        String url = mockServer.getUrl() + BASE_URL + "/" + NONEXISTENT_PRODUCT_ID;
-
-        assertThrows(HttpClientErrorException.NotFound.class, () -> {
-            restTemplate.getForObject(url, ProductResponse.class);
+        assertThrows(feign.FeignException.NotFound.class, () -> {
+            inventoryClient.getProductById(NONEXISTENT_PRODUCT_ID);
         });
     }
 }
