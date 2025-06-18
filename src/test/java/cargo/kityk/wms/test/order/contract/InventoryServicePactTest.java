@@ -122,6 +122,7 @@ public class InventoryServicePactTest {
     
 
     //todo the following tests are less shit now. However is there a way to test how we actualkly USE the client? Or is it overkill?
+    @Test
     @PactTestFor(pactMethod = "existingProductPact")
     @DisplayName("Should successfully retrieve an existing product from inventory")
     void testGetExistingProduct(MockServer mockServer) {
