@@ -70,7 +70,8 @@ dependencies {
 	
 	// Pact dependencies for consumer testing
 	testImplementation "au.com.dius.pact.consumer:junit5:${pactVersion}"
-	
+	testImplementation "au.com.dius.pact.consumer:junit:${pactVersion}"
+
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 

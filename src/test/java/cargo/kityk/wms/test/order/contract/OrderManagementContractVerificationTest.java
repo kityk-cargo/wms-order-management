@@ -36,9 +36,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,30 +93,7 @@ public class OrderManagementContractVerificationTest {
     @BeforeEach
     void setUp(PactVerificationContext context) {
         logger.info("Setting up Pact verification test on port {}", port);
-        
-        // Check default Pact folder
-        Path defaultPactPath = Paths.get("../wms-contracts/pact/rest/wms_order_management");
-        if (Files.exists(defaultPactPath)) {
-            logger.info("Default Pact folder exists at: {}", defaultPactPath.toAbsolutePath());
-        } else {
-            logger.warn("Default Pact folder does not exist at: {}", defaultPactPath.toAbsolutePath());
-        }
-        
-        // Check if we need to use an alternative pact file location
-        String pactFolderPath = System.getProperty("pact.folder.path");
-        logger.info("Pact folder path from system property: {}", pactFolderPath);
-        
-        if (pactFolderPath != null && !pactFolderPath.isEmpty()) {
-            Path pactPath = Paths.get(pactFolderPath);
-            if (Files.exists(pactPath) && Files.isDirectory(pactPath)) {
-                logger.info("Using Pact folder from system property: {}", pactPath.toAbsolutePath());
-                // Set the root directory for Pact files using system property
-                System.setProperty("pact.rootDir", pactFolderPath);
-            } else {
-                logger.error("Pact folder specified by system property does not exist or is not a directory: {}", pactPath.toAbsolutePath());
-            }
-        }
-        
+
         // Set up the test target - where the provider is running
         logger.info("Setting target to localhost:{}", port);
         context.setTarget(new HttpTestTarget("localhost", port));
