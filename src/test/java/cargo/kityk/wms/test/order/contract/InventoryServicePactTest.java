@@ -5,6 +5,7 @@ import au.com.dius.pact.consumer.dsl.DslPart;
 import au.com.dius.pact.consumer.dsl.LambdaDsl;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.dsl.PactDslWithProvider;
+import au.com.dius.pact.consumer.junit.MockServerConfig;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.PactSpecVersion;
@@ -53,7 +54,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 )
 @Import(UnitTestConfiguration.class)
 @ActiveProfiles("test")
-@PactTestFor(providerName = "wms_inventory_management", pactVersion = PactSpecVersion.V3, port = "9999")
+@PactTestFor(providerName = "wms_inventory_management", pactVersion = PactSpecVersion.V3)
+@MockServerConfig(hostInterface = "localhost", port = "9999")
 @Tag("pact")
 @DisplayName("Inventory Service Contract Tests")
 public class InventoryServicePactTest {
@@ -125,7 +127,7 @@ public class InventoryServicePactTest {
     @Test
     @PactTestFor(pactMethod = "existingProductPact")
     @DisplayName("Should successfully retrieve an existing product from inventory")
-    void testGetExistingProduct(MockServer mockServer) {
+    void testGetExistingProduct() {
         ProductResponse response = inventoryClient.getProductById(EXISTING_PRODUCT_ID);
 
         assertNotNull(response);
@@ -139,7 +141,7 @@ public class InventoryServicePactTest {
     @Test
     @PactTestFor(pactMethod = "nonexistentProductPact")
     @DisplayName("Should receive a 404 error when requesting a non-existent product")
-    void testGetNonexistentProduct(MockServer mockServer) {
+    void testGetNonexistentProduct() {
         assertThrows(feign.FeignException.NotFound.class, () -> {
             inventoryClient.getProductById(NONEXISTENT_PRODUCT_ID);
         });
