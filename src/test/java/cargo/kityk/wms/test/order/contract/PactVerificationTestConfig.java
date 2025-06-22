@@ -7,7 +7,6 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
-import org.springframework.test.context.TestPropertySource;
 
 /**
  * Test configuration for Pact verification tests.
@@ -17,18 +16,6 @@ import org.springframework.test.context.TestPropertySource;
 @TestConfiguration
 @Import(LiquibaseFileConfig.class)
 @Profile("dbIntegrationTest")
-@TestPropertySource(properties = {
-    "spring.datasource.url=${container.jdbc.url:jdbc:postgresql://localhost:5432/order_management_test}",
-    "spring.datasource.username=${container.jdbc.username:test}",
-    "spring.datasource.password=${container.jdbc.password:test}",
-    "spring.datasource.driver-class-name=${container.jdbc.driver:org.postgresql.Driver}",
-    "spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect",
-    "spring.jpa.hibernate.ddl-auto=validate",
-    "spring.jpa.show-sql=true",
-    "logging.level.org.springframework=INFO",
-    "logging.level.au.com.dius.pact=DEBUG",
-    "logging.level.cargo.kityk.wms=DEBUG"
-})
 public class PactVerificationTestConfig {
     private static final Logger logger = LoggerFactory.getLogger(PactVerificationTestConfig.class);
     

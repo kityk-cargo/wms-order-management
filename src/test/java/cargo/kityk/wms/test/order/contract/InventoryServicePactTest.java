@@ -1,6 +1,5 @@
 package cargo.kityk.wms.test.order.contract;
 
-import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.DslPart;
 import au.com.dius.pact.consumer.dsl.LambdaDsl;
 import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
@@ -11,6 +10,7 @@ import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.PactSpecVersion;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
+import cargo.kityk.wms.order.application.OrderApplication;
 import cargo.kityk.wms.order.service.client.InventoryClient;
 import cargo.kityk.wms.order.service.client.ProductResponse;
 import cargo.kityk.wms.test.order.testconfig.UnitTestConfiguration;
@@ -45,11 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
         "inventory.service.url=http://localhost:9999"  // Fixed port for Pact mock server
     },
     classes = {
-        cargo.kityk.wms.order.config.FeignClientConfig.class,
-        UnitTestConfiguration.class,
-        org.springframework.cloud.openfeign.FeignAutoConfiguration.class,
-        org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration.class,
-        org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration.class
+        OrderApplication.class
     }
 )
 @Import(UnitTestConfiguration.class)
