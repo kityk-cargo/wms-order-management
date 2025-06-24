@@ -13,9 +13,8 @@ group = 'cargo.kityk.wms'
 version = '0.0.1-SNAPSHOT'
 
 java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
-	}
+	sourceCompatibility = '21'
+	targetCompatibility = '21'
 }
 
 configurations {
@@ -48,8 +47,8 @@ dependencies {
 	implementation 'org.springframework.kafka:spring-kafka'
 	implementation 'org.apache.groovy:groovy-all:4.0.25'
 	
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+	compileOnly 'org.projectlombok:lombok:1.18.38'
+	annotationProcessor 'org.projectlombok:lombok:1.18.38'
 	
 	runtimeOnly 'org.postgresql:postgresql'
 	
