@@ -11,6 +11,9 @@ import au.com.dius.pact.core.model.PactSpecVersion;
 import au.com.dius.pact.core.model.RequestResponsePact;
 import au.com.dius.pact.core.model.annotations.Pact;
 import cargo.kityk.wms.order.application.OrderApplication;
+import cargo.kityk.wms.order.dto.StockLockItemDTO;
+import cargo.kityk.wms.order.dto.StockLockRequest;
+import cargo.kityk.wms.order.dto.StockLockResponse;
 import cargo.kityk.wms.order.service.client.InventoryClient;
 import cargo.kityk.wms.order.service.client.ProductResponse;
 import cargo.kityk.wms.test.order.testconfig.UnitTestConfiguration;
@@ -25,13 +28,16 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import static cargo.kityk.wms.order.service.client.InventoryClient.BASE_URL;
+import static cargo.kityk.wms.order.service.client.InventoryClient.STOCK_URL;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Pact consumer tests for the Inventory Service client.
@@ -117,6 +123,78 @@ public class InventoryServicePactTest {
                 .headers(headers)
                 .toPact();
     }
+
+    @Pact(consumer = "wms_order_management")
+    @DisplayName("Pact for successful stock locking")
+    public RequestResponsePact successfulStockLockPact(PactDslWithProvider builder) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+
+        DslPart requestBody = LambdaDsl.newJsonBody(body -> {
+            body.array("items", items -> {
+                items.object(item -> {
+                    item.numberValue("productId", 1L);
+                    item.numberValue("quantity", 5);
+                });
+                items.object(item -> {
+                    item.numberValue("productId", 2L);
+                    item.numberValue("quantity", 3);
+                });
+            });
+        }).build();
+
+        DslPart responseBody = LambdaDsl.newJsonBody(body -> {
+            body.stringValue("message", "Stock locked successfully");
+            body.booleanValue("success", true);
+        }).build();
+
+        return builder
+                .given("sufficient stock exists for products 1 and 2")
+                .uponReceiving("a request to lock stock for multiple products")
+                .path(STOCK_URL + "/lock")
+                .method("POST")
+                .headers(headers)
+                .body(requestBody)
+                .willRespondWith()
+                .status(200)
+                .headers(headers)
+                .body(responseBody)
+                .toPact();
+    }
+
+    @Pact(consumer = "wms_order_management")
+    @DisplayName("Pact for insufficient stock error")
+    public RequestResponsePact insufficientStockPact(PactDslWithProvider builder) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Type", "application/json");
+
+        DslPart requestBody = LambdaDsl.newJsonBody(body -> {
+            body.array("items", items -> {
+                items.object(item -> {
+                    item.numberValue("productId", 1L);
+                    item.numberValue("quantity", 100);
+                });
+            });
+        }).build();
+
+        DslPart errorResponseBody = new PactDslJsonBody()
+                .stringValue("criticality", "critical")
+                .stringMatcher("id", "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", "550e8400-e29b-41d4-a716-446655440000")
+                .stringValue("detail", "Insufficient stock for product 1. Requested: 100, Available: 10");
+
+        return builder
+                .given("insufficient stock exists for product 1")
+                .uponReceiving("a request to lock more stock than available")
+                .path(STOCK_URL + "/lock")
+                .method("POST")
+                .headers(headers)
+                .body(requestBody)
+                .willRespondWith()
+                .status(422)
+                .headers(headers)
+                .body(errorResponseBody)
+                .toPact();
+    }
     
 
     //todo the following tests are less shit now. However is there a way to test how we actualkly USE the client? Or is it overkill?
@@ -140,6 +218,44 @@ public class InventoryServicePactTest {
     void testGetNonexistentProduct() {
         assertThrows(feign.FeignException.NotFound.class, () -> {
             inventoryClient.getProductById(NONEXISTENT_PRODUCT_ID);
+        });
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "successfulStockLockPact")
+    @DisplayName("Should successfully lock stock for multiple products")
+    void testSuccessfulStockLock() {
+        // Arrange
+        StockLockRequest request = StockLockRequest.builder()
+                .items(Arrays.asList(
+                        StockLockItemDTO.builder().productId(1L).quantity(5).build(),
+                        StockLockItemDTO.builder().productId(2L).quantity(3).build()
+                ))
+                .build();
+
+        // Act
+        StockLockResponse response = inventoryClient.lockStock(request);
+
+        // Assert
+        assertNotNull(response);
+        assertTrue(response.isSuccess());
+        assertEquals("Stock locked successfully", response.getMessage());
+    }
+
+    @Test
+    @PactTestFor(pactMethod = "insufficientStockPact")
+    @DisplayName("Should receive a 422 error when requesting to lock more stock than available")
+    void testInsufficientStockLock() {
+        // Arrange
+        StockLockRequest request = StockLockRequest.builder()
+                .items(Arrays.asList(
+                        StockLockItemDTO.builder().productId(1L).quantity(100).build()
+                ))
+                .build();
+
+        // Act & Assert
+        assertThrows(feign.FeignException.UnprocessableEntity.class, () -> {
+            inventoryClient.lockStock(request);
         });
     }
 }

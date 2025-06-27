@@ -10,6 +10,7 @@ import cargo.kityk.wms.order.entity.OrderItem;
 import cargo.kityk.wms.order.repository.OrderRepository;
 import cargo.kityk.wms.order.repository.CustomerRepository;
 import cargo.kityk.wms.order.exception.ResourceNotFoundException;
+import cargo.kityk.wms.order.service.StockLockingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,9 +44,12 @@ public class OrderServiceTest {
     @Mock
     private CustomerRepository customerRepository;
 
-    @Mock
+        @Mock
     private ProductValidationService productValidationService;
-
+    
+    @Mock
+    private StockLockingService stockLockingService;
+    
     @InjectMocks
     private OrderService orderService;
     
@@ -63,6 +67,11 @@ public class OrderServiceTest {
         // Initialize empty objects that will be customized in individual tests
         orderCreateDTO = OrderCreateDTO.builder().customerId(CUSTOMER_ID).items(new ArrayList<>()).build();
         testOrder = createBasicOrder(ORDER_ID, testCustomer, PROCESSING_STATUS);
+        
+        // Set up default behavior for stock locking to succeed
+        // This ensures existing tests continue to pass unless specifically testing stock locking failures
+        // Using lenient() to avoid unnecessary stubbing exceptions for tests that don't call stock locking
+        lenient().doNothing().when(stockLockingService).lockStockForOrder(any());
     }
     
     @Nested

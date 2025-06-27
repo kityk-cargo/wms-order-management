@@ -13,6 +13,8 @@ import cargo.kityk.wms.order.entity.Order;
 import cargo.kityk.wms.order.entity.OrderItem;
 import cargo.kityk.wms.order.repository.CustomerRepository;
 import cargo.kityk.wms.order.repository.OrderRepository;
+import cargo.kityk.wms.order.dto.StockLockRequest;
+import cargo.kityk.wms.order.dto.StockLockResponse;
 import cargo.kityk.wms.order.service.client.InventoryClient;
 import cargo.kityk.wms.order.service.client.ProductResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -119,6 +121,14 @@ public class OrderManagementContractVerificationTest {
         
         // Setup mock to return this product for any ID
         Mockito.when(inventoryClient.getProductById(Mockito.anyLong())).thenReturn(productResponse);
+        
+        // Setup mock for stock locking to succeed by default
+        StockLockResponse successfulLockResponse = StockLockResponse.builder()
+                .success(true)
+                .message("Stock locked successfully")
+                .build();
+        Mockito.when(inventoryClient.lockStock(Mockito.any(StockLockRequest.class)))
+                .thenReturn(successfulLockResponse);
     }
 
     @TestTemplate

@@ -29,14 +29,17 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CustomerRepository customerRepository;
     private final ProductValidationService productValidationService;
+    private final StockLockingService stockLockingService;
     
     @Autowired
     public OrderService(OrderRepository orderRepository, 
                        CustomerRepository customerRepository,
-                       ProductValidationService productValidationService) {
+                       ProductValidationService productValidationService,
+                       StockLockingService stockLockingService) {
         this.orderRepository = orderRepository;
         this.customerRepository = customerRepository;
         this.productValidationService = productValidationService;
+        this.stockLockingService = stockLockingService;
     }
     
     /**
@@ -101,6 +104,18 @@ public class OrderService {
         
         // Save the order
         Order savedOrder = orderRepository.save(newOrder);
+        
+        // Attempt to lock stock for the order items
+        try {
+            stockLockingService.lockStockForOrder(orderCreateDTO.getItems());
+            log.info("Successfully locked stock for order ID: {}", savedOrder.getId());
+        } catch (Exception e) {
+            log.error("Failed to lock stock for order ID: {}. Error: {}", savedOrder.getId(), e.getMessage());
+            // Update order status to indicate stock lock error
+            savedOrder.setStatus("Stock Lock Error");
+            savedOrder = orderRepository.save(savedOrder);
+            log.warn("Order ID: {} status updated to 'Stock Lock Error' due to stock locking failure", savedOrder.getId());
+        }
         
         // Convert to DTO and return
         return mapOrderToDTO(savedOrder);
