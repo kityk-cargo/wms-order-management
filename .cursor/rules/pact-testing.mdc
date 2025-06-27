@@ -1,0 +1,202 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+description: Pact contract testing guidelines and best practices for WMS Order Management
+---
+
+# Pact Contract Testing - WMS Order Management
+
+## When This Rule Applies
+This rule activates when working with:
+- Contract tests (files in `src/test/java/cargo/kityk/wms/test/order/contract/`)
+- Pact-related code and configurations
+- Consumer-driven contract testing
+- API contract verification
+
+## Critical Pact Commands
+```bash
+# ALWAYS use this for Pact testing
+./gradlew pactVerify
+
+# NEVER use this for Pact tests (excludes @Tag("pact"))
+./gradlew test
+```
+
+## Consumer Pact Test Structure
+
+### File Organization
+```
+src/test/java/cargo/kityk/wms/test/order/contract/
+├── InventoryServicePactTest.java      # Consumer tests for inventory service
+├── OrderManagementContractVerificationTest.java  # Provider verification
+└── PactVerificationTestConfig.java    # Test configuration
+```
+
+### Consumer Test Template
+```java
+@ExtendWith(PactConsumerTestExt.class)
+@PactTestFor(providerName = "wms_inventory_management")
+@Tag("pact")
+class ServicePactTest {
+    
+    @Pact(consumer = "wms_order_management")
+    @DisplayName("Pact for successful operation")
+    public RequestResponsePact successfulOperationPact(PactDslWithProvider builder) {
+        // Define request/response contract
+    }
+    
+    @Test
+    @PactTestFor(pactMethod = "successfulOperationPact")
+    @DisplayName("Should successfully handle operation")
+    void testSuccessfulOperation() {
+        // Test implementation
+    }
+}
+```
+
+## Contract Design Principles
+
+### Request/Response Patterns
+- **Success cases**: Return 200 with expected data structure
+- **Not found**: Return 404 with empty body or error details
+- **Validation errors**: Return 422 with detailed error information
+- **Server errors**: Return 500 with generic error message
+
+### Data Matchers
+```java
+// Use appropriate matchers for flexible contracts
+DslPart responseBody = LambdaDsl.newJsonBody(body -> {
+    body.numberValue("id", 1L);                    // Exact match
+    body.numberMatching("quantity", "\\d+", 50);   // Regex match
+    body.stringType("status");                     // Type match
+    body.timestamp("createdAt", "yyyy-MM-dd'T'HH:mm:ss");
+});
+```
+
+### Error Response Structure
+```java
+// Follow CommonErrorFormat for error responses
+DslPart errorBody = LambdaDsl.newJsonBody(body -> {
+    body.stringValue("type", "INSUFFICIENT_STOCK");
+    body.stringValue("title", "Insufficient Stock");
+    body.numberValue("status", 422);
+    body.stringType("detail");
+    body.stringType("instance");
+});
+```
+
+## Stock Locking Contract Specifics
+
+### Successful Lock Request
+```java
+// Request body for stock locking
+DslPart requestBody = LambdaDsl.newJsonBody(body -> {
+    body.array("items", items -> {
+        items.object(item -> {
+            item.numberValue("productId", 1L);
+            item.numberValue("quantity", 5);
+        });
+    });
+});
+
+// Success response
+DslPart responseBody = LambdaDsl.newJsonBody(body -> {
+    body.stringValue("message", "Stock locked successfully");
+    body.booleanValue("success", true);
+});
+```
+
+### Insufficient Stock Error
+```java
+// 422 response for insufficient stock
+.willRespondWith()
+.status(422)
+.headers(headers)
+.body(LambdaDsl.newJsonBody(body -> {
+    body.stringValue("type", "INSUFFICIENT_STOCK");
+    body.stringValue("title", "Insufficient Stock Available");
+    body.numberValue("status", 422);
+    body.stringValue("detail", "Cannot lock requested quantities");
+}))
+```
+
+## Provider Verification Setup
+
+### Mock Configuration
+```java
+// Mock external dependencies in provider tests
+@MockBean
+private InventoryClient inventoryClient;
+
+@BeforeEach
+void setupMocks() {
+    // Mock successful stock locking
+    when(inventoryClient.lockStock(any(StockLockRequest.class)))
+        .thenReturn(StockLockResponse.builder()
+            .success(true)
+            .message("Stock locked successfully")
+            .build());
+}
+```
+
+## Pact File Management
+
+### Generated Pact Files
+- Location: `build/pacts/`
+- Format: `{consumer}-{provider}.json`
+- **NEVER edit manually** - always regenerate via tests
+
+### Publishing Pacts
+```bash
+# Pact files are transformed and ready for publishing
+# Check build/pacts-restructured/ for organized output
+```
+
+## Common Issues & Solutions
+
+### Issue: Pact tests not running
+**Solution**: Use `./gradlew pactVerify` not `./gradlew test`
+
+### Issue: Contract verification fails
+**Solutions**:
+1. Check if provider API has changed
+2. Verify mock data matches expected format
+3. Ensure HTTP status codes are consistent
+4. Review error response structure
+
+### Issue: Mock not working in provider tests
+**Solutions**:
+1. Ensure `@MockBean` is used correctly
+2. Set up mocks in `@BeforeEach` method
+3. Use `lenient()` for optional mock interactions
+4. Verify mock return types match client expectations
+
+### Issue: Token usage optimization
+**Solutions**:
+1. Keep pact descriptions concise but descriptive
+2. Use realistic but minimal test data
+3. Avoid overly complex request/response structures
+4. Focus on essential contract elements
+
+## Testing Checklist
+- [ ] Consumer pact tests pass with `./gradlew pactVerify`
+- [ ] Provider verification passes
+- [ ] Contract covers success and error scenarios
+- [ ] Mock data is realistic and consistent
+- [ ] HTTP status codes follow REST conventions
+- [ ] Error responses follow CommonErrorFormat
+- [ ] Tests have meaningful `@DisplayName` annotations
+- [ ] Pact files are generated correctly
+
+## Best Practices Summary
+1. **Always use `./gradlew pactVerify`** for pact testing
+2. **Write realistic test data** that reflects production scenarios
+3. **Cover both happy path and error cases** in contracts
+4. **Use appropriate HTTP status codes** (200, 404, 422, 500)
+5. **Follow CommonErrorFormat** for error responses
+6. **Mock external dependencies** properly in provider tests
+7. **Keep contracts focused** on essential API behavior
+8. **Coordinate with provider teams** when contracts change

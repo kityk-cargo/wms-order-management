@@ -1,0 +1,167 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+---
+rule_type: always
+---
+
+# WMS Order Management - Cursor AI Rules
+
+## Project Context
+You are working on the WMS (Warehouse Management System) Order Management microservice, a Spring Boot application that handles order creation, updates, and management with integration to inventory services through contract testing.
+
+## Development Philosophy
+- This is a REAL production system - no "in a real project" disclaimers
+- Prioritize newer dependency versions with consistency checks
+- Follow best practices and write human-readable code
+- Apply DRY (Don't Repeat Yourself) principles
+- Aim to remove more code than you add when possible
+
+## Architecture & Technology Stack
+- **Framework**: Spring Boot 3.x with Java 21+
+- **Database**: PostgreSQL with JPA/Hibernate
+- **Build Tool**: Gradle with Kotlin DSL
+- **Testing**: JUnit 5, Mockito, Testcontainers
+- **Contract Testing**: Pact JVM
+- **API Client**: OpenFeign
+- **Documentation**: OpenAPI 3.0
+
+## CRITICAL: Pact Contract Testing Rules
+
+### 🚨 ALWAYS use `./gradlew pactVerify` for Pact testing
+- **NEVER** use `./gradlew test` for Pact-related tests
+- The `test` task excludes Pact tests with `excludeTags 'pact'`
+- Consumer pact tests are tagged with `@Tag("pact")`
+- Provider verification happens through `pactVerify` task
+
+### Pact Workflow
+1. **Consumer Tests**: Write consumer pact tests in `src/test/java/cargo/kityk/wms/test/order/contract/`
+2. **Run Consumer Tests**: `./gradlew pactVerify` (generates pact files)
+3. **Provider Verification**: Provider services use `pactVerify` to verify contracts
+4. **Breaking Changes**: If pact verification fails, coordinate with provider team
+
+### Pact Best Practices
+- Use `@Pact` annotation for consumer contract definitions
+- Use `@PactTestFor` for consumer test execution
+- Include realistic test data in pact interactions
+- Use proper HTTP status codes (200, 404, 422, etc.)
+- Follow existing pact patterns in `InventoryServicePactTest.java`
+
+## Code Quality Standards
+
+### Java & Spring Boot
+- Use Java 21+ features (records, pattern matching, switch expressions)
+- Prefer constructor injection over field injection
+- Use `@Slf4j` for logging
+- Follow Spring Boot naming conventions
+- Use `@Valid` for request validation
+- Implement proper exception handling with `@RestControllerAdvice`
+
+### Testing Practices
+- **Structure**: Follow Arrange/Act/Assert pattern
+- **Naming**: Use `@DisplayName` for human-readable test descriptions
+- **Mocking**: Minimize mocking, test actual behavior when possible
+- **Data**: Use realistic test data that matches production scenarios
+- **Coverage**: Aim for meaningful tests, not just coverage metrics
+
+### API Design
+- Follow RESTful principles
+- Use appropriate HTTP status codes
+- Implement consistent error response format (`CommonErrorFormat`)
+- Use OpenAPI annotations for documentation
+- Validate all inputs with Bean Validation
+
+### Database & JPA
+- Use JPA entity relationships appropriately
+- Implement proper transaction boundaries
+- Use `@Transactional` judiciously
+- Prefer JPQL over native queries when possible
+- Use database migrations with Liquibase
+
+## Error Handling
+- Use custom exceptions extending `OrderManagementException`
+- Implement proper HTTP status codes
+- Provide meaningful error messages
+- Log errors at appropriate levels
+- Use structured error responses
+
+## Security
+- Validate all inputs
+- Use HTTPS for external calls
+- Implement proper authentication/authorization
+- Sanitize sensitive data in logs
+- Follow OWASP guidelines
+
+## Performance
+- Use pagination for large result sets
+- Implement proper caching strategies
+- Monitor database query performance
+- Use connection pooling
+- Optimize JSON serialization
+
+## Git & Collaboration
+- Use conventional commits (feat:, fix:, docs:, refactor:, test:)
+- Keep commit messages under 60 characters
+- Write meaningful PR descriptions
+- Include tests with all changes
+- Update documentation as needed
+
+## Documentation
+- Use JavaDoc for public APIs
+- Keep README.md up to date
+- Document architectural decisions
+- Use comments sparingly - prefer self-documenting code
+- Update OpenAPI spec with changes
+
+## Specific WMS Order Management Rules
+
+### Order Service
+- Orders must be validated before saving
+- Stock locking happens synchronously during order creation
+- Failed stock locking results in "Stock Lock Error" status
+- Use proper transaction management for order operations
+
+### Inventory Integration
+- Use `InventoryClient` for all inventory service calls
+- Implement proper retry logic for external calls
+- Handle inventory service failures gracefully
+- Use circuit breaker pattern for resilience
+
+### DTOs and Validation
+- Use separate DTOs for create/update operations
+- Implement comprehensive validation
+- Use builder pattern for complex DTOs
+- Follow naming conventions (DTO suffix)
+
+### Repository Layer
+- Use Spring Data JPA repositories
+- Implement custom queries when needed
+- Use proper exception handling
+- Follow repository naming conventions
+
+## Code Review Checklist
+- [ ] All tests pass (including `./gradlew pactVerify`)
+- [ ] Code follows project conventions
+- [ ] Proper error handling implemented
+- [ ] Security considerations addressed
+- [ ] Performance implications considered
+- [ ] Documentation updated if needed
+- [ ] Pact contracts updated if API changes made
+
+## Common Pitfalls to Avoid
+- Don't use `./gradlew test` for Pact testing
+- Don't modify pact JSON files manually
+- Don't ignore transaction boundaries
+- Don't use generic exceptions
+- Don't skip input validation
+- Don't expose internal implementation details in APIs
+- Don't forget to update contracts when changing APIs
+
+## Useful Commands
+- `./gradlew build` - Full build including tests
+- `./gradlew pactVerify` - Run all Pact contract tests
+- `./gradlew test` - Run unit/integration tests (excludes Pact)
+- `./gradlew bootRun` - Start the application
+- `./gradlew clean build` - Clean build
