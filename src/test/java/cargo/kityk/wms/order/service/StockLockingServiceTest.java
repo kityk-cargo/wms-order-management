@@ -67,7 +67,7 @@ class StockLockingServiceTest {
     }
 
     @Test
-    @DisplayName("Should successfully lock stock for valid order items")
+    @DisplayName("Valid order items successfully lock stock without exceptions")
     void testLockStockForOrder_Success() {
         // Arrange
         when(inventoryClient.lockStock(any(StockLockRequest.class)))
@@ -81,7 +81,7 @@ class StockLockingServiceTest {
     }
 
     @Test
-    @DisplayName("Should handle successful response with false success flag")
+    @DisplayName("Inventory service success=false throws OrderManagementException with recovery suggestion")
     void testLockStockForOrder_FailureResponse() {
         // Arrange
         when(inventoryClient.lockStock(any(StockLockRequest.class)))
@@ -106,7 +106,7 @@ class StockLockingServiceTest {
     }
 
     @Test
-    @DisplayName("Should handle 422 UnprocessableEntity exception from inventory service")
+    @DisplayName("422 UnprocessableEntity from inventory throws 'Insufficient stock' exception with restocking suggestion")
     void testLockStockForOrder_UnprocessableEntity() {
         // Arrange
         FeignException.UnprocessableEntity feignException = 
@@ -134,7 +134,7 @@ class StockLockingServiceTest {
     }
 
     @Test
-    @DisplayName("Should handle generic exception from inventory service")
+    @DisplayName("Generic inventory exception throws SERVICE_UNAVAILABLE with retry suggestion")
     void testLockStockForOrder_GenericException() {
         // Arrange
         RuntimeException genericException = new RuntimeException("Service unavailable");
@@ -161,7 +161,7 @@ class StockLockingServiceTest {
     }
 
     @Test
-    @DisplayName("Should handle empty order items list gracefully")
+    @DisplayName("Empty order items list skips inventory client call")
     void testLockStockForOrder_EmptyList() {
         // Arrange
         List<OrderItemCreateDTO> emptyList = Collections.emptyList();
@@ -174,7 +174,7 @@ class StockLockingServiceTest {
     }
 
     @Test
-    @DisplayName("Should handle null order items list gracefully")
+    @DisplayName("Null order items list skips inventory client call")
     void testLockStockForOrder_NullList() {
         // Act & Assert
         assertDoesNotThrow(() -> stockLockingService.lockStockForOrder(null));
@@ -184,7 +184,7 @@ class StockLockingServiceTest {
     }
 
     @Test
-    @DisplayName("Should correctly map order items to stock lock items")
+    @DisplayName("Order items correctly map to StockLockRequest with matching productIds and quantities")
     void testLockStockForOrder_CorrectMapping() {
         // Arrange
         when(inventoryClient.lockStock(any(StockLockRequest.class)))
