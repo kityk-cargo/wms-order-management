@@ -1,12 +1,13 @@
 plugins {
 	id 'java'
 	id 'groovy'
-	id 'org.springframework.boot' version '3.5.0-M3'
+	id 'org.springframework.boot' version '3.5.3'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'checkstyle'
 	id 'pmd'
-	id 'com.github.spotbugs' version '6.1.6'
+	id 'com.github.spotbugs' version '6.2.2'
 	id 'org.springdoc.openapi-gradle-plugin' version '1.8.0'
+	id 'com.github.ben-manes.versions' version '0.52.0'
 }
 
 group = 'cargo.kityk.wms'
@@ -31,7 +32,7 @@ repositories {
 }
 
 ext {
-	set('springCloudVersion', "2025.0.0-M1")
+	set('springCloudVersion', "2025.0.0-M2")
 	set('pactVersion', '4.6.7')
 }
 
@@ -45,23 +46,23 @@ dependencies {
 	
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 	implementation 'org.springframework.kafka:spring-kafka'
-	implementation 'org.apache.groovy:groovy-all:4.0.25'
+	implementation 'org.apache.groovy:groovy-all:4.0.27'
 	
 	compileOnly 'org.projectlombok:lombok:1.18.38'
 	annotationProcessor 'org.projectlombok:lombok:1.18.38'
 	
 	runtimeOnly 'org.postgresql:postgresql'
 	
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6'
-	implementation 'org.springdoc:springdoc-openapi-starter-common:2.8.6'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
+	implementation 'org.springdoc:springdoc-openapi-starter-common:2.8.9'
 	implementation 'org.apache.groovy:groovy-json:4.0.25'
 	
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.kafka:spring-kafka-test'
 	testImplementation 'com.h2database:h2'
-	testImplementation 'org.testcontainers:testcontainers:1.20.5'
-	testImplementation 'org.testcontainers:junit-jupiter:1.20.5'
-	testImplementation 'org.testcontainers:postgresql:1.20.5'
+	testImplementation 'org.testcontainers:testcontainers:1.21.3'
+	testImplementation 'org.testcontainers:junit-jupiter:1.21.3'
+	testImplementation 'org.testcontainers:postgresql:1.21.3'
 	
 	// Pact dependencies for provider testing
 	testImplementation "au.com.dius.pact.provider:junit5:${pactVersion}"
