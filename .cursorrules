@@ -1,0 +1,174 @@
+# WMS Order Management - Cursor Rules
+
+## Project Context
+You are working on the WMS (Warehouse Management System) Order Management microservice, a Spring Boot application that handles order creation, updates, and management with integration to inventory services through contract testing.
+
+## Development Philosophy
+- This is a REAL production system - no "in a real project" disclaimers
+- Prioritize newer dependency versions with consistency checks
+- Follow best practices and write human-readable code
+- Apply DRY (Don't Repeat Yourself) principles
+- Aim to remove more code than you add when possible
+
+## Architecture & Technology Stack
+- **Framework**: Spring Boot 3.x with Java 24
+- **Database**: PostgreSQL with JPA/Hibernate
+- **Testing**: JUnit 5, Mockito, TestContainers
+- **Contract Testing**: Pact for consumer-driven contracts
+- **Build**: Gradle with Kotlin DSL
+- **Documentation**: Comprehensive Javadocs for public APIs
+
+## Testing Guidelines
+
+### General Testing Rules
+- Use "Arrange/Act/Assert" structure for all tests
+- Give tests human-readable names using `@DisplayName` annotations
+- Test meaningful functionality - avoid testing the framework
+- Minimize mocking while using it when necessary
+- Test actual code behavior, not test doubles
+- Prefer assertions over behavior verification when possible
+
+### Pact Contract Testing - CRITICAL RULES
+- **ALWAYS use `./gradlew pactVerify` for running ANY Pact-related tests**
+- Never use regular `test` task for Pact tests due to tag exclusions
+- Consumer tests generate contracts, provider tests verify them
+- All Pact tests must be tagged with `@Tag("pact")`
+- Use parallel tool calls when running multiple Pact-related commands
+- Contract tests verify API compatibility between services
+
+### Pact Testing Workflow
+```bash
+# For consumer contract tests (generates contracts)
+./gradlew pactVerify --no-daemon
+
+# For provider verification (verifies against consumer contracts) 
+./gradlew pactVerify --no-daemon
+
+# NEVER use ./gradlew test for Pact tests
+```
+
+### Breaking Changes in Pact
+- Use environment variables to handle breaking changes dynamically
+- When introducing breaking changes, focus on `matchingBranch` verification
+- Document breaking change procedures in commit messages
+- Coordinate with consumer teams before introducing breaking changes
+
+## Code Quality Standards
+
+### Documentation Practices
+- Use comments sparingly - prioritize self-documenting code
+- Write comprehensive Javadocs for public APIs and complex business logic
+- Update README files for "how to" and "what" - not API documentation
+- Remove outdated documentation when found
+
+### Error Handling
+- Use the common error format pattern consistently
+- Provide meaningful error messages with recovery suggestions
+- Log errors at appropriate levels with correlation IDs
+- Handle failures gracefully with proper HTTP status codes
+
+### Dependencies & Imports
+- Keep dependencies up-to-date while ensuring compatibility
+- Use specific imports, avoid wildcard imports
+- Group imports logically (standard library, third-party, internal)
+- Remove unused imports and dependencies
+
+## File and Code Organization
+
+### Package Structure
+- Follow the existing package structure strictly
+- Group related functionality together
+- Keep DTOs, entities, and services in appropriate packages
+- Maintain clear separation between layers
+
+### Naming Conventions
+- Use descriptive, intention-revealing names
+- Follow Java naming conventions (camelCase, PascalCase)
+- Use meaningful prefixes for test methods (test*, should*, when*)
+- Avoid abbreviations unless industry standard
+
+## Integration & Microservices
+
+### Service Communication
+- Use Feign clients for external service communication
+- Implement proper circuit breakers and timeouts
+- Handle service failures gracefully
+- Document service contracts with OpenAPI/Swagger
+
+### Database Operations
+- Use repositories appropriately, avoid complex queries in services
+- Implement proper transaction boundaries
+- Use database migrations through Liquibase
+- Write efficient queries and avoid N+1 problems
+
+## CI/CD & Development Workflow
+
+### Git Practices
+- Write descriptive commit messages
+- Keep commits focused and atomic
+- Use conventional commit format when applicable
+- Include Pact contract changes in appropriate commits
+
+### Testing in CI/CD
+- Run `pactVerify` for all contract-related tests in CI
+- Ensure all tests pass before merging
+- Use TestContainers for integration tests
+- Maintain fast feedback loops
+
+### Environment Variables
+- Use environment variables for configuration
+- Document required environment variables
+- Handle missing environment variables gracefully
+- Use different configurations for different environments
+
+## Specific Commands to Remember
+
+### Gradle Tasks
+```bash
+# Compile and run all tests except Pact
+./gradlew test --no-daemon
+
+# Run Pact contract tests (consumer and provider)
+./gradlew pactVerify --no-daemon  
+
+# Compile code only
+./gradlew compileJava --no-daemon
+
+# Run specific test class
+./gradlew test --tests "*OrderServiceTest*" --no-daemon
+```
+
+### Development Workflow
+1. Write failing test first (TDD when appropriate)
+2. Implement minimal code to make test pass
+3. Refactor while keeping tests green
+4. Run `pactVerify` for any contract-related changes
+5. Ensure all tests pass before committing
+
+## Performance Considerations
+- Use appropriate caching strategies
+- Implement pagination for large datasets
+- Monitor memory usage in tests
+- Use connection pooling effectively
+- Profile and optimize database queries
+
+## Security Guidelines
+- Validate all input data
+- Use parameterized queries to prevent SQL injection
+- Implement proper authentication and authorization
+- Log security-relevant events
+- Follow OWASP guidelines for web application security
+
+## Monitoring & Observability
+- Include appropriate logging with structured formats
+- Use correlation IDs for request tracing
+- Implement health checks and metrics
+- Monitor business metrics, not just technical metrics
+- Use appropriate log levels (ERROR, WARN, INFO, DEBUG)
+
+## Remember
+- This is production code - write it accordingly
+- Contract tests are critical for microservice reliability
+- Always use `pactVerify` for Pact testing
+- Focus on maintainable, readable, and testable code
+- When in doubt, favor simplicity over complexity 
